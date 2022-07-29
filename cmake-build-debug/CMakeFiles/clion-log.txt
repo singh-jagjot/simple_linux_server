@@ -1,0 +1,4 @@
+/home/jj/Apps/clion/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/jj/Apps/clion/bin/ninja/linux/ninja -G Ninja -S /home/jj/CLionProjects/bbserver2 -B /home/jj/CLionProjects/bbserver2/cmake-build-debug
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/jj/CLionProjects/bbserver2/cmake-build-debug
