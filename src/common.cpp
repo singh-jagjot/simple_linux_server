@@ -6,7 +6,7 @@
 #include <vector>
 
 void create_socket_connection(std::string address, int port, int max_threads, const std::string &file_path,
-                              int (*handle)(const int &socket_fd, const std::string &file_path)) {
+                              int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add)) {
     //    Creating a IPv4 and TCP socket
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == -1) {
@@ -58,17 +58,16 @@ void create_socket_connection(std::string address, int port, int max_threads, co
 }
 
 void connection(int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, const std::string &file_path,
-                int (*handle)(const int &socket_fd, const std::string &file_path)) {
+                int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add)) {
 //  Grabbing a connection from the listening queue
     while (true) {
         int new_socket = accept(socket_fd, (struct sockaddr *) &socket_add, (socklen_t *) &socket_add_len);
-        printf("Connected Client/Peer Address: %s:%i\n", inet_ntoa(socket_add.sin_addr), ntohs(socket_add.sin_port));
         if (new_socket < 0) {
             printf("Grabbing a connection failed. Error No: %i\n", errno);
             exit(EXIT_FAILURE);
         }
 
-        handle(new_socket, file_path);
+        handle(new_socket, file_path, socket_add);
 
 //      closing the connected socket
         shutdown(new_socket, SHUT_RDWR);

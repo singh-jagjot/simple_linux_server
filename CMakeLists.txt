@@ -3,4 +3,4 @@ project(bbserver2)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(bbserver2 src/main.cpp src/server.cpp src/db_file_util.cpp src/common.cpp src/string_helper.cpp src/client.cpp)
+add_executable(bbserver2 src/client.cpp src/common.cpp src/db_file_util.cpp src/main.cpp src/peer.cpp src/server.cpp src/string_helper.cpp)

@@ -1,8 +1,11 @@
 #include <unistd.h>
 #include <cstring>
 #include <fstream>
+#include <csignal>
 #include "../include/server.h"
 #include "../include/string_helper.h"
+
+#define PID_FILE "bbserv.pid"
 
 std::string bbfile;
 std::string peers;
@@ -13,18 +16,7 @@ int sp = 10000;
 bool is_daemon = true;
 bool debug_mode = false;
 
-void sigterm_handler(int signum) {
-//TODO
-}
-
-void sigquit_handler(int signum) {
-//TODO
-}
-
-void sighup_handler(int signum) {
-//TODO
-}
-
+std::map<std::string, std::string> args_map;
 
 void read_config() {
     std::ifstream config_in(config_file);
@@ -84,11 +76,50 @@ void read_config() {
     config_in.close();
 }
 
+void write_pid(){
+    std::ofstream file(PID_FILE);
+    //    printf("PID: %d\nPPID: %d\n", getpid(), getppid());
+    if(file){
+        file << "PID: " << getpid() << "\nPPID: " << getppid() << std::endl;
+    } else {
+        printf("Unable to create/write %s\n", PID_FILE);
+    }
+    file.close();
+}
+
+void sigterm_handler(int signum) {
+    printf("SIGTERM received. Terminating\n");
+    exit(EXIT_SUCCESS);
+}
+
+void sigquit_handler(int signum) {
+    printf("SIGQUIT received. Terminating\n");
+    exit(EXIT_SUCCESS);
+}
+
+void sighup_handler(int signum) {
+    printf("SIGHUP received. Restarting...\n");
+    read_config();
+
+    args_map[THMAX] = std::to_string(thmax);
+    args_map[BBPORT] = std::to_string(bp);
+    args_map[SYNCPORT] = std::to_string(sp);
+    args_map[BBFILE] = bbfile;
+    args_map[PEERS] = peers;
+//    args_map[DAEMON] = std::to_string(is_daemon);
+    args_map[DEBUG] = std::to_string(debug_mode);
+    args_map[CONFIG_FILE] = config_file;
+
+    printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
+           bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
+    run_server(args_map);
+}
+
 int main(int argc, char *argv[]) {
     int opt;
-//    signal(SIGTERM, sigterm_handler);
-//    signal(SIGQUIT, sigquit_handler);
-//    signal(SIGHUP, sighup_handler);
+    signal(SIGTERM, sigterm_handler);
+    signal(SIGQUIT, sigquit_handler);
+    signal(SIGHUP, sighup_handler);
 
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "-c")) {
@@ -144,8 +175,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    std::map<std::string, std::string> args_map;
-
     args_map[THMAX] = std::to_string(thmax);
     args_map[BBPORT] = std::to_string(bp);
     args_map[SYNCPORT] = std::to_string(sp);
@@ -158,6 +187,7 @@ int main(int argc, char *argv[]) {
     printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
 
+    write_pid();
     run_server(args_map);
 
 //    auto print = (*printf);

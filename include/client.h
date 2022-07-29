@@ -6,6 +6,8 @@
 #define BBSERVER2_CLIENT_H
 
 #include <string>
+#include <netinet/in.h>
+
 #define BUFFER_SIZE 1024
 
 //Server Responses
@@ -28,5 +30,5 @@
 #define CMD_REPLACE "REPLACE "
 #define CMD_QUIT "QUIT "
 
-extern int handle_client(const int& socket_fd, const std::string& file_path);
+extern int handle_client(const int& socket_fd, const std::string& file_path, sockaddr_in &socket_add);
 #endif //BBSERVER2_CLIENT_H

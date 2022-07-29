@@ -13,7 +13,7 @@ std::binary_semaphore read_semaphore{1};
 std::binary_semaphore write_semaphore{1};
 
 
-std::fstream get_stream(const std::string& db_file) {
+std::fstream get_stream(const std::string &db_file) {
     std::fstream file(db_file, std::ios::app | std::ios::in);
     if (!file) {
         printf("Error creating %s\n", db_file.data());
@@ -21,10 +21,10 @@ std::fstream get_stream(const std::string& db_file) {
     return file;
 }
 
-std::string read_message(const std::string& db_file,const std::string& msg) {
+std::string read_message(const std::string &db_file, const std::string &msg) {
     read_semaphore.acquire();
     readers_count++;
-    if(readers_count == 1){
+    if (readers_count == 1) {
         write_semaphore.acquire();
     }
     read_semaphore.release();
@@ -46,7 +46,7 @@ std::string read_message(const std::string& db_file,const std::string& msg) {
 
     read_semaphore.acquire();
     readers_count--;
-    if(readers_count == 0){
+    if (readers_count == 0) {
         write_semaphore.release();
     }
     printf("Readers count: %i\n", (int) readers_count);
@@ -54,7 +54,7 @@ std::string read_message(const std::string& db_file,const std::string& msg) {
     return line;
 }
 
-std::string read_recent_line(const std::string& db_file) {
+std::string read_recent_line(const std::string &db_file) {
     auto file = get_stream(db_file);
     std::string line;
     std::string temp;
@@ -74,7 +74,7 @@ std::string read_recent_line(const std::string& db_file) {
     return line;
 }
 
-int write_message(const std::string& db_file, std::string& poster, std::string msg) {
+int write_message(const std::string &db_file, std::string &poster, std::string msg) {
     write_semaphore.acquire();
     writers_count++;
     printf("Writers count %i\n", (int) writers_count);
@@ -97,7 +97,7 @@ int write_message(const std::string& db_file, std::string& poster, std::string m
     return msg_no;
 }
 
-int replace_message(const std::string& db_file,const std::string& poster, std::string msg) {
+int replace_message(const std::string &db_file, const std::string &poster, std::string msg) {
     write_semaphore.acquire();
     writers_count++;
     printf("Writers count %i\n", (int) writers_count);
@@ -134,4 +134,14 @@ int replace_message(const std::string& db_file,const std::string& poster, std::s
     printf("Writers count %i\n", (int) writers_count);
     write_semaphore.release();
     return found ? std::stoi(msg_no) : -1;
+}
+
+void lock_acquire() {
+    read_semaphore.acquire();
+    write_semaphore.acquire();
+}
+
+void lock_release() {
+    read_semaphore.release();
+    write_semaphore.release();
 }

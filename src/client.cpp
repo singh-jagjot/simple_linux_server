@@ -7,9 +7,10 @@
 #include <cstring>
 #include "../include/client.h"
 #include "../include/db_file_util.h"
+#include "../include/peer.h"
 #include "../include/string_helper.h"
 
-int handle_client(const int &socket_fd, const std::string &file_path) {
+int handle_client(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add) {
     std::string client_name = "nobody";
     char read_buffer[BUFFER_SIZE] = {0};
     char response_buffer[BUFFER_SIZE] = {0};

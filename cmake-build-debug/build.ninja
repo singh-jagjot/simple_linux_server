@@ -49,20 +49,8 @@ cmake_ninja_workdir = /home/jj/CLionProjects/bbserver2/cmake-build-debug/
 
 build cmake_object_order_depends_target_bbserver2: phony || CMakeFiles/bbserver2.dir
 
-build CMakeFiles/bbserver2.dir/src/main.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/main.cpp || cmake_object_order_depends_target_bbserver2
-  DEP_FILE = CMakeFiles/bbserver2.dir/src/main.cpp.o.d
-  FLAGS = -g -std=gnu++20
-  OBJECT_DIR = CMakeFiles/bbserver2.dir
-  OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
-
-build CMakeFiles/bbserver2.dir/src/server.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/server.cpp || cmake_object_order_depends_target_bbserver2
-  DEP_FILE = CMakeFiles/bbserver2.dir/src/server.cpp.o.d
-  FLAGS = -g -std=gnu++20
-  OBJECT_DIR = CMakeFiles/bbserver2.dir
-  OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
-
-build CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/db_file_util.cpp || cmake_object_order_depends_target_bbserver2
-  DEP_FILE = CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o.d
+build CMakeFiles/bbserver2.dir/src/client.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/client.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/client.cpp.o.d
   FLAGS = -g -std=gnu++20
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
@@ -73,14 +61,32 @@ build CMakeFiles/bbserver2.dir/src/common.cpp.o: CXX_COMPILER__bbserver2_Debug /
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
 
-build CMakeFiles/bbserver2.dir/src/string_helper.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/string_helper.cpp || cmake_object_order_depends_target_bbserver2
-  DEP_FILE = CMakeFiles/bbserver2.dir/src/string_helper.cpp.o.d
+build CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/db_file_util.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o.d
   FLAGS = -g -std=gnu++20
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
 
-build CMakeFiles/bbserver2.dir/src/client.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/client.cpp || cmake_object_order_depends_target_bbserver2
-  DEP_FILE = CMakeFiles/bbserver2.dir/src/client.cpp.o.d
+build CMakeFiles/bbserver2.dir/src/main.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/main.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/main.cpp.o.d
+  FLAGS = -g -std=gnu++20
+  OBJECT_DIR = CMakeFiles/bbserver2.dir
+  OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
+
+build CMakeFiles/bbserver2.dir/src/peer.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/peer.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/peer.cpp.o.d
+  FLAGS = -g -std=gnu++20
+  OBJECT_DIR = CMakeFiles/bbserver2.dir
+  OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
+
+build CMakeFiles/bbserver2.dir/src/server.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/server.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/server.cpp.o.d
+  FLAGS = -g -std=gnu++20
+  OBJECT_DIR = CMakeFiles/bbserver2.dir
+  OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
+
+build CMakeFiles/bbserver2.dir/src/string_helper.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/string_helper.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/string_helper.cpp.o.d
   FLAGS = -g -std=gnu++20
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
@@ -93,7 +99,7 @@ build CMakeFiles/bbserver2.dir/src/client.cpp.o: CXX_COMPILER__bbserver2_Debug /
 #############################################
 # Link the executable bbserver2
 
-build bbserver2: CXX_EXECUTABLE_LINKER__bbserver2_Debug CMakeFiles/bbserver2.dir/src/main.cpp.o CMakeFiles/bbserver2.dir/src/server.cpp.o CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o CMakeFiles/bbserver2.dir/src/common.cpp.o CMakeFiles/bbserver2.dir/src/string_helper.cpp.o CMakeFiles/bbserver2.dir/src/client.cpp.o
+build bbserver2: CXX_EXECUTABLE_LINKER__bbserver2_Debug CMakeFiles/bbserver2.dir/src/client.cpp.o CMakeFiles/bbserver2.dir/src/common.cpp.o CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o CMakeFiles/bbserver2.dir/src/main.cpp.o CMakeFiles/bbserver2.dir/src/peer.cpp.o CMakeFiles/bbserver2.dir/src/server.cpp.o CMakeFiles/bbserver2.dir/src/string_helper.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   POST_BUILD = :

@@ -39,3 +39,7 @@
 
 ### VS Code ###
 .vscode/
+
+### CMake ###
+.cmake
+

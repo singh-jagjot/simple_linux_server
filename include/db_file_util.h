@@ -27,4 +27,8 @@ extern int write_message(const std::string &db_file, std::string &poster, std::s
 
 extern int replace_message(const std::string &db_file, const std::string &poster, std::string msg);
 
+extern void lock_acquire();
+
+extern void lock_release();
+
 #endif //BBSERVER2_DB_FILE_UTIL_H
