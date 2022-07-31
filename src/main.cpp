@@ -1,11 +1,15 @@
+#include <cstdio>
 #include <unistd.h>
 #include <cstring>
 #include <fstream>
 #include <csignal>
+#include <map>
+#include <sys/stat.h>
 #include "../include/server.h"
 #include "../include/string_helper.h"
 
 #define PID_FILE "bbserv.pid"
+#define LOG_FILE "bbserv.log"
 
 std::string bbfile;
 std::string peers;
@@ -17,6 +21,10 @@ bool is_daemon = true;
 bool debug_mode = false;
 
 std::map<std::string, std::string> args_map;
+auto lfile = freopen(LOG_FILE, "a", stdout);
+
+
+void create_daemon();
 
 void read_config() {
     std::ifstream config_in(config_file);
@@ -94,6 +102,10 @@ void sigterm_handler(int signum) {
 
 void sigquit_handler(int signum) {
     printf("SIGQUIT received. Terminating\n");
+    for (auto x = sysconf(_SC_OPEN_MAX); x>=0; x--)
+    {
+        close (x);
+    }
     exit(EXIT_SUCCESS);
 }
 
@@ -109,17 +121,59 @@ void sighup_handler(int signum) {
 //    args_map[DAEMON] = std::to_string(is_daemon);
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
-
-    printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
-           bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
+    create_daemon();
+    // printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
+    //        bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
+    sleep(60);
     run_server(args_map);
+}
+
+void set_signals(){
+    signal(SIGTERM, sigterm_handler);
+    signal(SIGQUIT, sigquit_handler);
+    signal(SIGHUP, sighup_handler);
+}
+
+void create_daemon(){
+    pid_t pid;
+    pid = fork();
+    if(pid < 0){
+        printf("%s\n", "1st forking failed to create a daemon. Exiting..\n");
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0)
+    {
+        printf("%s\n", "1st forking success! Terminating the parent process..\n");
+        exit(EXIT_SUCCESS);
+    }
+
+    if (setsid() < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    
+    set_signals();
+
+    pid = fork();
+    if(pid < 0){
+        printf("%s\n", "2nd forking failed to create a daemon. Exiting..\n");
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0)
+    {
+        printf("%s\n", "2nd forking forking success! Terminating the parent process..\n");
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+    for (auto x = sysconf(_SC_OPEN_MAX); x>=0; x--)
+    {
+        close (x);
+    }
 }
 
 int main(int argc, char *argv[]) {
     int opt;
-    signal(SIGTERM, sigterm_handler);
-    signal(SIGQUIT, sigquit_handler);
-    signal(SIGHUP, sighup_handler);
 
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "-c")) {
@@ -127,7 +181,7 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
-
+    
     read_config();
 
     while ((opt = getopt(argc, argv, ":b:fdT:tp:s:c:")) != -1) {
@@ -187,9 +241,14 @@ int main(int argc, char *argv[]) {
     printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
 
+    if(is_daemon){
+        create_daemon();
+    } else{
+        set_signals();
+    }
+    
     write_pid();
     run_server(args_map);
-
 //    auto print = (*printf);
     return 0;
 }

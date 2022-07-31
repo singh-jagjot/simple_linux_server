@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <chrono>
+#include <thread>
 #include "../include/db_file_util.h"
 #include "../include/string_helper.h"
 

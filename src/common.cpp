@@ -2,11 +2,16 @@
 // Created by jj on 22/07/22.
 //
 #include "../include/common.h"
+#include <cstring>
 #include <thread>
 #include <vector>
+#include <unistd.h>
 
-void create_socket_connection(std::string address, int port, int max_threads, const std::string &file_path,
+void create_socket_connection(std::string address, std::string is_daemon, int port, int max_threads, const std::string &file_path,
                               int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add)) {
+    if(!strcmp(is_daemon.data(), "true")){
+
+    
     //    Creating a IPv4 and TCP socket
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == -1) {

@@ -10,10 +10,12 @@
 #include <arpa/inet.h>
 #include <string>
 
-extern void create_socket_connection(std::string address, int port, int max_threads, const std::string &file_path,
+extern void create_socket_connection(std::string address, std::string is_daemon, int port, int max_threads, const std::string &file_path,
                               int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add));
 
-extern void connection(int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, const std::string &file_path,
+extern void connection(std::string is_daemon, int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, const std::string &file_path,
                        int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add));
+
+extern void master_socket_close();
 
 #endif //BBSERVER2_COMMON_H

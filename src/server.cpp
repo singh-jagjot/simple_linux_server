@@ -16,6 +16,6 @@ int run_server(std::map<std::string, std::string> &args) {
 //        create_socket_connection(address[0], std::stoi(args[SYNCPORT]), peers.size(), args[BBFILE], &handle_peer);
 //    }
     //  Creating socket connection for the clients
-    create_socket_connection("", std::stoi(args[BBPORT]), std::stoi(args[THMAX]), args[BBFILE], &handle_client);
+    create_socket_connection("", args[DAEMON], std::stoi(args[BBPORT]), std::stoi(args[THMAX]), args[BBFILE], &handle_client);
     return 0;
 }
