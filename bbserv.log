@@ -1,0 +1,19 @@
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+ bbserv.conf, thmax: 12, bp: 8080, sp: 3452, is_daemon: 0, debug: 1
+Client: JJ
+Bytes read: 9, Message: USER JJ
+Readers count: 1
+Readers count: 0
+Bytes read: 10, Message: READ 130
+SIGHUP received. Restarting...
+bbfile: bbfile, peers: 127.0.0.1:8081 127.0.0.2:8082, configfile: bbserv.conf, thmax: 12, bp: 8080, sp: 3452, is_daemon: 1, debug: 1
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53
+Grabbing a connection failed. Error No: 53

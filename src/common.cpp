@@ -7,17 +7,24 @@
 #include <vector>
 #include <unistd.h>
 
+int socket_fd;
+
 void create_socket_connection(std::string address, std::string is_daemon, int port, int max_threads, const std::string &file_path,
                               int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add)) {
-    if(!strcmp(is_daemon.data(), "true")){
+    // if(!strcmp(is_daemon.data(), "true")){
 
     
     //    Creating a IPv4 and TCP socket
-    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == -1) {
         printf("Failed to create TCP socket. Error No: %i\n", errno);
         exit(EXIT_FAILURE);
     }
+
+    // Setting option to reuse the socket
+    int reuse = 1;
+    setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+
     //    Attaching socket to the given port
     int connection_port = port;
     sockaddr_in socket_add{};
@@ -49,20 +56,16 @@ void create_socket_connection(std::string address, std::string is_daemon, int po
     std::vector<std::thread> threads;
 
     for (int i = 0; i < max_threads; ++i) {
-        threads.emplace_back(connection, std::ref(socket_fd), std::ref(socket_add), std::ref(socket_add_len),
+        threads.emplace_back(connection,std::ref(is_daemon), std::ref(socket_fd), std::ref(socket_add), std::ref(socket_add_len),
                              std::ref(file_path), std::ref(handle));
     }
 
     for (auto &t: threads) {
         t.join();
     }
-
-//  closing the listening socket
-    close(socket_fd);
-    shutdown(socket_fd, SHUT_RDWR);
 }
 
-void connection(int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, const std::string &file_path,
+void connection(std::string is_daemon, int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, const std::string &file_path,
                 int (*handle)(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add)) {
 //  Grabbing a connection from the listening queue
     while (true) {
@@ -78,4 +81,10 @@ void connection(int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, co
         shutdown(new_socket, SHUT_RDWR);
         close(new_socket);
     }
+}
+
+void master_socket_close(){
+//  closing the listening socket
+    shutdown(socket_fd, SHUT_RDWR);
+    close(socket_fd);
 }

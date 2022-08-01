@@ -5,6 +5,7 @@
 #include <csignal>
 #include <map>
 #include <sys/stat.h>
+#include "../include/common.h"
 #include "../include/server.h"
 #include "../include/string_helper.h"
 
@@ -21,7 +22,7 @@ bool is_daemon = true;
 bool debug_mode = false;
 
 std::map<std::string, std::string> args_map;
-auto lfile = freopen(LOG_FILE, "a", stdout);
+// auto lfile = freopen(LOG_FILE, "a", stdout);
 
 
 void create_daemon();
@@ -118,13 +119,13 @@ void sighup_handler(int signum) {
     args_map[SYNCPORT] = std::to_string(sp);
     args_map[BBFILE] = bbfile;
     args_map[PEERS] = peers;
-//    args_map[DAEMON] = std::to_string(is_daemon);
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
-    create_daemon();
-    // printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
-    //        bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
-    sleep(60);
+    // create_daemon();
+    printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
+           bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
+    // sleep(60);
+    master_socket_close();
     run_server(args_map);
 }
 
