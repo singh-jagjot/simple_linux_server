@@ -90,7 +90,8 @@ void write_pid(){
     std::ofstream file(PID_FILE);
     //    printf("PID: %d\nPPID: %d\n", getpid(), getppid());
     if(file){
-        file << "PID: " << getpid() << "\nPPID: " << getppid() << std::endl;
+//        file << "PID: " << getpid() << "\nPPID: " << getppid() << std::endl;
+        file << getpid() <<std::endl;
     } else {
         printf("Unable to create/write %s\n", PID_FILE);
     }
@@ -104,10 +105,6 @@ void sigterm_handler(int signum) {
 
 void sigquit_handler(int signum) {
     printf("SIGQUIT received. Terminating\n");
-    for (auto x = sysconf(_SC_OPEN_MAX); x>=0; x--)
-    {
-        close (x);
-    }
     exit(EXIT_SUCCESS);
 }
 
@@ -121,6 +118,8 @@ void sighup_handler(int signum) {
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
     args_map[SYNCPORT] = std::to_string(sp);
+    args_map[BBPORT] = std::to_string(bp);
+    args_map[BBPORT] = std::to_string(bp);
 //    if(strcmp(args_map[BBPORT].data(), std::to_string(bp).data()) != 0){
 //        args_map[BBPORT] = std::to_string(bp);
 //    }
@@ -176,6 +175,7 @@ void create_daemon(){
     {
         close (x);
     }
+    freopen(LOG_FILE, "w+", stdout);
 }
 
 int main(int argc, char *argv[]) {
