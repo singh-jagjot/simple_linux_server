@@ -23,9 +23,9 @@ void create_socket_connection(std::string address, std::string is_daemon, int po
 
     // Setting option to reuse the socket
     int reuse = 1;
-    setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT | SO_REUSEADDR, &reuse, sizeof(reuse));
 
-    //    Attaching socket to the given port
+    //Attaching socket to the given port
     int connection_port = port;
     sockaddr_in socket_add{};
     socket_add.sin_family = AF_INET;
@@ -47,7 +47,7 @@ void create_socket_connection(std::string address, std::string is_daemon, int po
         exit(EXIT_FAILURE);
     }
 
-//    Start listening the socket and hold max_threads connections
+    //Start listening the socket and hold max_threads connections
     if (listen(socket_fd, max_threads) < 0) {
         printf("Listening on the socket failed. Error No: %i\n", errno);
         exit(EXIT_FAILURE);
@@ -72,8 +72,13 @@ void connection(std::string is_daemon, int &socket_fd, sockaddr_in &socket_add, 
         int new_socket = accept(socket_fd, (struct sockaddr *) &socket_add, (socklen_t *) &socket_add_len);
         if (new_socket < 0) {
             printf("Grabbing a connection failed. Error No: %i\n", errno);
-            exit(EXIT_FAILURE);
+//            exit(EXIT_FAILURE);
+            sleep(1);
+            continue;
         }
+        // Setting option to reuse the socket
+        int reuse = 1;
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT | SO_REUSEADDR, &reuse, sizeof(reuse));
 
         handle(new_socket, file_path, socket_add);
 

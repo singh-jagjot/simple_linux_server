@@ -14,14 +14,6 @@ std::binary_semaphore read_semaphore{1};
 std::binary_semaphore write_semaphore{1};
 
 
-std::fstream get_stream(const std::string &db_file) {
-    std::fstream file(db_file, std::ios::app | std::ios::in);
-    if (!file) {
-        printf("Error creating %s\n", db_file.data());
-    }
-    return file;
-}
-
 std::string read_message(const std::string &db_file, const std::string &msg) {
     read_semaphore.acquire();
     readers_count++;
@@ -30,7 +22,7 @@ std::string read_message(const std::string &db_file, const std::string &msg) {
     }
     read_semaphore.release();
     printf("Readers count: %i\n", (int) readers_count);
-    auto file = get_stream(db_file);
+    std::ifstream file(db_file);
     auto msg_no = string_split(msg, ' ')[1];
     std::string line, temp_msg_no;
     while (file) {
@@ -56,7 +48,7 @@ std::string read_message(const std::string &db_file, const std::string &msg) {
 }
 
 std::string read_recent_line(const std::string &db_file) {
-    auto file = get_stream(db_file);
+    std::ifstream file(db_file);
     std::string line;
     std::string temp;
     int msg_no = -1;
@@ -83,7 +75,8 @@ int write_message(const std::string &db_file, std::string &poster, std::string m
     std::string line = read_recent_line(db_file);
     int msg_no = line.empty() ? 0 : std::stoi(string_split(line, '/')[0]);
     line = std::to_string(++msg_no) + "/" + poster + "/" + msg;
-    auto file = get_stream(db_file);
+//    auto file = get_stream(db_file);
+    std::ofstream file(db_file, std::ios::app);
     if (file) {
         file << line << std::endl;
     } else {
@@ -106,7 +99,8 @@ int replace_message(const std::string &db_file, const std::string &poster, std::
     auto v = string_file_msg_split(msg, '/', 1);
     auto msg_no = v[0];
     msg = v[1];
-    std::fstream file(db_file, std::ios::out | std::ios::in);
+//    std::fstream file(db_file, std::ios::out | std::ios::in);
+    std::fstream file(db_file);
     std::string line, temp_msg_no, replacement = msg_no + "/" + poster + "/" + msg;
     bool found = false;
     while (file) {

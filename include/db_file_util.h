@@ -17,8 +17,6 @@ extern std::atomic<int> writers_count;
 extern std::binary_semaphore read_semaphore;
 extern std::binary_semaphore write_semaphore;
 
-extern std::fstream get_stream(const std::string &db_file);
-
 extern std::string read_message(const std::string &db_file, const std::string &msg);
 
 extern std::string read_recent_line(const std::string &db_file);

@@ -8,6 +8,7 @@
 #include "../include/common.h"
 #include "../include/server.h"
 #include "../include/string_helper.h"
+#include "../include/db_file_util.h"
 
 #define PID_FILE "bbserv.pid"
 #define LOG_FILE "bbserv.log"
@@ -115,13 +116,17 @@ void sighup_handler(int signum) {
     read_config();
 
     args_map[THMAX] = std::to_string(thmax);
-    args_map[BBPORT] = std::to_string(bp);
-    args_map[SYNCPORT] = std::to_string(sp);
     args_map[BBFILE] = bbfile;
     args_map[PEERS] = peers;
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
-    // create_daemon();
+    args_map[SYNCPORT] = std::to_string(sp);
+//    if(strcmp(args_map[BBPORT].data(), std::to_string(bp).data()) != 0){
+//        args_map[BBPORT] = std::to_string(bp);
+//    }
+//    if(strcmp(args_map[BBPORT].data(), std::to_string(bp).data()) != 0){
+//        args_map[BBPORT] = std::to_string(bp);
+//    }
     printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
     // sleep(60);
