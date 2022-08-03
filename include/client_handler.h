@@ -2,13 +2,11 @@
 // Created by jj on 22/07/22.
 //
 
-#ifndef BBSERVER2_CLIENT_H
-#define BBSERVER2_CLIENT_H
+#ifndef BBSERVER2_CLIENT_HANDLER_H
+#define BBSERVER2_CLIENT_HANDLER_H
 
 #include <string>
 #include <netinet/in.h>
-
-#define BUFFER_SIZE 1024
 
 //Server Responses
 #define RES_INITIAL_GREETING "0.0 Hello!Welcome to Bulletin Board Server!\n"
@@ -31,4 +29,4 @@
 #define CMD_QUIT "QUIT "
 
 extern int handle_client(const int& socket_fd, const std::string& file_path, sockaddr_in &socket_add);
-#endif //BBSERVER2_CLIENT_H
+#endif //BBSERVER2_CLIENT_HANDLER_H

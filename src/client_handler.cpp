@@ -5,9 +5,10 @@
 #include <unistd.h>
 #include <vector>
 #include <cstring>
-#include "../include/client.h"
+#include "../include/common.h"
+#include "../include/client_handler.h"
 #include "../include/db_file_util.h"
-#include "../include/peer.h"
+//#include "../include/peer.h"
 #include "../include/string_helper.h"
 
 int handle_client(const int &socket_fd, const std::string &file_path, sockaddr_in &socket_add) {
@@ -23,6 +24,11 @@ int handle_client(const int &socket_fd, const std::string &file_path, sockaddr_i
         if (bytes_read < 0) {
             printf("Error while reading the read_buffer. Error No: %i", errno);
             exit(EXIT_FAILURE);
+        }
+
+        if (bytes_read == 0){
+            printf("Client exited abruptly\n");
+            break;
         }
 
         if (string_startswith(read_buffer, CMD_USER)) {

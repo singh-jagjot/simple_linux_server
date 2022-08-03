@@ -6,9 +6,9 @@
 #include <map>
 #include <sys/stat.h>
 #include "../include/common.h"
+#include "../include/connect_client.h"
 #include "../include/server.h"
 #include "../include/string_helper.h"
-#include "../include/db_file_util.h"
 
 #define PID_FILE "bbserv.pid"
 #define LOG_FILE "bbserv.log"

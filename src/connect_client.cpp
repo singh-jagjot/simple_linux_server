@@ -1,8 +1,7 @@
 //
 // Created by jj on 22/07/22.
 //
-#include "../include/common.h"
-#include <cstring>
+#include "../include/connect_client.h"
 #include <thread>
 #include <vector>
 #include <unistd.h>

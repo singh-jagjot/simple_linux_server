@@ -3,29 +3,34 @@
 //
 #include <vector>
 #include <cstring>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include "../include/peer.h"
+#include <poll.h>
+#include "../include/common.h"
+#include "../include/peer_handler.h"
 #include "../include/string_helper.h"
 #include "../include/db_file_util.h"
 
-int peer_socket_fd;
 bool is_master = false;
+std::vector<std::string> peers_add_vec;
+std::vector<int> peers_port_vec;
 
-int handle_peer(const int& socket_fd, const std::string& file_path, sockaddr_in &socket_add){
-
-    peer_socket_fd = socket_fd;
+int handle_peer(const int peer_fd, std::vector<std::string> &peers_add, std::vector<int> &peers_port){
+    peers_add_vec = peers_add;
+    peers_port_vec = peers_port;
     char read_buffer[BUFFER_SIZE] = {0};
     char response_buffer[BUFFER_SIZE] = {0};
-    std::vector<std::string> client_msgs;
-    printf("Connected Peer Address: %s:%i\n", inet_ntoa(socket_add.sin_addr), ntohs(socket_add.sin_port));
+    bool in_progress = false;
+    std::vector<std::string> peer_msgs;
 
     while (true) {
         bzero(response_buffer, BUFFER_SIZE);
-        long bytes_read = read(socket_fd, read_buffer, BUFFER_SIZE);
+        long bytes_read = read(peer_fd, read_buffer, BUFFER_SIZE);
         if (bytes_read < 0) {
             printf("Error while reading the read_buffer. Error No: %i", errno);
             exit(EXIT_FAILURE);
+        }
+        if (bytes_read == 0){
+            printf("Peer exited abruptly\n");
+            break;
         }
         if(string_startswith(read_buffer, SYNC_START)) {
             try {
@@ -54,18 +59,17 @@ int handle_peer(const int& socket_fd, const std::string& file_path, sockaddr_in 
         } else if(string_startswith(read_buffer, SYNC_COMPLETED)){
             lock_release();
             printf("%s: lock released\n", SYNC_COMPLETED);
-        } else{
+        } else if(string_startswith(read_buffer, QUIT)){
+            printf("Peer exiting\n");
+            break;
+        }{
             sprintf(response_buffer,"Invalid cmd: %s\n", read_buffer);
         }
-        write(socket_fd, response_buffer, BUFFER_SIZE);
+        write(peer_fd, response_buffer, BUFFER_SIZE);
         printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
         bzero(read_buffer, BUFFER_SIZE);
     }
     return 1;
-}
-
-long send_to_peer(std::string msg){
-    return write(peer_socket_fd, msg.data(), msg.size());
 }
 
 void master_set(){
@@ -74,4 +78,22 @@ void master_set(){
 
 void master_unset(){
     is_master = false;
+}
+
+void wait(){
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(SYNC_TIMEOUT);
+}
+
+int write_operation(std::string &msg){
+    master_set();
+    std::string final_msg = msg;
+    for(int i = 0; i< peers_add_vec.size(); ++i){
+        auto add = peers_add_vec[i];
+        auto port = peers_port_vec[i];
+        if(send_to_peer(add, port, final_msg) == -1){
+            return -1;
+        }
+    }
+    return 0;
 }
