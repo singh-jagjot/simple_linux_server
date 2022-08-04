@@ -19,7 +19,9 @@ extern std::binary_semaphore write_semaphore;
 
 extern std::string read_message(const std::string &db_file, const std::string &msg);
 
-extern std::string read_recent_line(const std::string &db_file);
+std::string read_recent_line(const std::string &db_file);
+
+extern std::string read_recent_line_number(const std::string &db_file);
 
 extern int write_message(const std::string &db_file, std::string &poster, std::string msg);
 

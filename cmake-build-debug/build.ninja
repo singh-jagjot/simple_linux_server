@@ -85,6 +85,12 @@ build CMakeFiles/bbserver2.dir/src/peer_handler.cpp.o: CXX_COMPILER__bbserver2_D
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
 
+build CMakeFiles/bbserver2.dir/src/peer_notify.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/peer_notify.cpp || cmake_object_order_depends_target_bbserver2
+  DEP_FILE = CMakeFiles/bbserver2.dir/src/peer_notify.cpp.o.d
+  FLAGS = -g -std=gnu++20
+  OBJECT_DIR = CMakeFiles/bbserver2.dir
+  OBJECT_FILE_DIR = CMakeFiles/bbserver2.dir/src
+
 build CMakeFiles/bbserver2.dir/src/server.cpp.o: CXX_COMPILER__bbserver2_Debug /home/jj/CLionProjects/bbserver2/src/server.cpp || cmake_object_order_depends_target_bbserver2
   DEP_FILE = CMakeFiles/bbserver2.dir/src/server.cpp.o.d
   FLAGS = -g -std=gnu++20
@@ -105,7 +111,7 @@ build CMakeFiles/bbserver2.dir/src/string_helper.cpp.o: CXX_COMPILER__bbserver2_
 #############################################
 # Link the executable bbserver2
 
-build bbserver2: CXX_EXECUTABLE_LINKER__bbserver2_Debug CMakeFiles/bbserver2.dir/src/client_handler.cpp.o CMakeFiles/bbserver2.dir/src/connect_client.cpp.o CMakeFiles/bbserver2.dir/src/connect_peer.cpp.o CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o CMakeFiles/bbserver2.dir/src/main.cpp.o CMakeFiles/bbserver2.dir/src/peer_handler.cpp.o CMakeFiles/bbserver2.dir/src/server.cpp.o CMakeFiles/bbserver2.dir/src/string_helper.cpp.o
+build bbserver2: CXX_EXECUTABLE_LINKER__bbserver2_Debug CMakeFiles/bbserver2.dir/src/client_handler.cpp.o CMakeFiles/bbserver2.dir/src/connect_client.cpp.o CMakeFiles/bbserver2.dir/src/connect_peer.cpp.o CMakeFiles/bbserver2.dir/src/db_file_util.cpp.o CMakeFiles/bbserver2.dir/src/main.cpp.o CMakeFiles/bbserver2.dir/src/peer_handler.cpp.o CMakeFiles/bbserver2.dir/src/peer_notify.cpp.o CMakeFiles/bbserver2.dir/src/server.cpp.o CMakeFiles/bbserver2.dir/src/string_helper.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/bbserver2.dir
   POST_BUILD = :

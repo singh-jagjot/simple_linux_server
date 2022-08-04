@@ -7,6 +7,7 @@
 
 #include <string>
 #include <netinet/in.h>
+#include <map>
 
 //Server Responses
 #define RES_INITIAL_GREETING "0.0 Hello!Welcome to Bulletin Board Server!\n"
@@ -28,5 +29,5 @@
 #define CMD_REPLACE "REPLACE "
 #define CMD_QUIT "QUIT "
 
-extern int handle_client(const int& socket_fd, const std::string& file_path, sockaddr_in &socket_add);
+extern int handle_client(int client_fd, std::map<std::string, std::string> &args);
 #endif //BBSERVER2_CLIENT_HANDLER_H

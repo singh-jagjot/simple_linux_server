@@ -67,6 +67,11 @@ std::string read_recent_line(const std::string &db_file) {
     return line;
 }
 
+std::string read_recent_line_number(const std::string &db_file){
+    std::string line = read_recent_line(db_file);
+    return line.empty() ? "0" : string_split(line, '/')[0];
+}
+
 int write_message(const std::string &db_file, std::string &poster, std::string msg) {
     write_semaphore.acquire();
     writers_count++;

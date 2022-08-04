@@ -252,7 +252,6 @@ int main(int argc, char *argv[]) {
     } else{
         set_signals();
     }
-    
     write_pid();
     run_server(args_map);
 //    auto print = (*printf);

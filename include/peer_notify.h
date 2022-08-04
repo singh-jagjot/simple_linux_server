@@ -7,6 +7,6 @@
 
 #include <string>
 
-extern long send_to_peer(std::string add, int port, std::string msg);
+extern long send_to_peer(std::string ip, int port, std::string msg);
 
 #endif //BBSERVER2_PEER_NOTIFY_H

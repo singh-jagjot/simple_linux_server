@@ -16,6 +16,6 @@
 #define DEBUG "DEBUG"
 #define CONFIG_FILE "CONFIG_FILE"
 
-#define QUIT "QUIT"
+#define QUIT "QUIT, "
 
 #endif //BBSERVER2_COMMON_H

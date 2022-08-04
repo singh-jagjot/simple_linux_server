@@ -16,21 +16,16 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
     std::vector<std::string> peers = string_split(args[PEERS], ' ');
     std::vector<std::string> peers_add;
     std::vector<int> peers_port;
-
-    for(auto &peer: peers){
+    for (auto &peer: peers) {
         auto ipv4_add = string_split(peer, ':');
-        if(ipv4_add.size() != 2){
+        if (ipv4_add.size() != 2) {
             printf("Wrong IP address: %s\n", peer.data());
             exit(EXIT_FAILURE);
         }
         peers_add.push_back(ipv4_add[0]);
         peers_port.push_back(std::stoi(ipv4_add[1]));
+//        printf("Peer added: %s:%s\n", ipv4_add[0].data(),ipv4_add[1].data());
     }
-
-//    while (1){
-//        send_to_peer(peers_add[0], peers_port[0], "This is a peer!\n");
-//        sleep(5);
-//    }
 
     //    Creating a IPv4 and TCP socket
     master_socket_peer = socket(AF_INET, SOCK_STREAM, 0);
@@ -65,7 +60,7 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
 
     std::vector<std::thread> threads;
     for (int i = 0; i < peers.size(); ++i) {
-        threads.emplace_back(accept_peers, master_socket_peer, std::ref(socket_add), socket_add_len, std::ref(peers_add), std::ref(peers_port));
+        threads.emplace_back(accept_peers, master_socket_peer, std::ref(socket_add), socket_add_len, std::ref(args));
     }
 
     for (auto &t: threads) {
@@ -73,8 +68,12 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
     }
 }
 
-void accept_peers(const int socket_fd, sockaddr_in &socket_add, const int socket_add_len, std::vector<std::string> &peers_add, std::vector<int> &peers_port) {
-    //  Grabbing a connection from the listening queue
+[[noreturn]] void accept_peers(const int socket_fd, sockaddr_in &socket_add, const int socket_add_len, std::map<std::string, std::string> &args) {
+    std::string iadd = "127.0.0.1:" + args[SYNCPORT];
+    set_my_add(iadd);
+    set_peers(args[PEERS]);
+
+    //  Grabbing a accept_clients from the listening queue
     while (true) {
         int peer_fd = accept(socket_fd, (struct sockaddr *) &socket_add, (socklen_t *) &socket_add_len);
         if (peer_fd < 0) {
@@ -82,12 +81,13 @@ void accept_peers(const int socket_fd, sockaddr_in &socket_add, const int socket
             sleep(1);
             continue;
         }
+        printf("Master Peer FD: %i\n", peer_fd);
 //        auto add = inet_ntoa(socket_add.sin_addr);
 //        auto port = ntohs(socket_add.sin_port);
 //        printf("Peer connected. Address: %s:%u\n", add, port);
         printf("Peer connected\n");
 
-        handle_peer(peer_fd, peers_add, peers_port);
+        handle_peer(peer_fd, args);
 
         //closing the connected socket
         shutdown(peer_fd, SHUT_RDWR);
