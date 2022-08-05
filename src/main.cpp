@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include "../include/common.h"
 #include "../include/connect_client.h"
+#include "../include/connect_peer.h"
 #include "../include/server.h"
 #include "../include/string_helper.h"
 
@@ -130,6 +131,7 @@ void sighup_handler(int signum) {
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
     // sleep(60);
     master_socket_close();
+    master_socket_peer_close();
     run_server(args_map);
 }
 
@@ -244,7 +246,7 @@ int main(int argc, char *argv[]) {
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
 
-    printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
+    printf("bbfile: %s, peers_set: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
 
     if(is_daemon){

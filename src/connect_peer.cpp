@@ -13,19 +13,8 @@
 int master_socket_peer;
 
 void create_socket_peer(std::map<std::string, std::string> &args) {
+    set_peers(args[PEERS]);
     std::vector<std::string> peers = string_split(args[PEERS], ' ');
-    std::vector<std::string> peers_add;
-    std::vector<int> peers_port;
-    for (auto &peer: peers) {
-        auto ipv4_add = string_split(peer, ':');
-        if (ipv4_add.size() != 2) {
-            printf("Wrong IP address: %s\n", peer.data());
-            exit(EXIT_FAILURE);
-        }
-        peers_add.push_back(ipv4_add[0]);
-        peers_port.push_back(std::stoi(ipv4_add[1]));
-//        printf("Peer added: %s:%s\n", ipv4_add[0].data(),ipv4_add[1].data());
-    }
 
     //    Creating a IPv4 and TCP socket
     master_socket_peer = socket(AF_INET, SOCK_STREAM, 0);
@@ -57,12 +46,11 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
         exit(EXIT_FAILURE);
     }
     printf("Listening on the socket successful.\n");
-
     std::vector<std::thread> threads;
-    for (int i = 0; i < peers.size(); ++i) {
-        threads.emplace_back(accept_peers, master_socket_peer, std::ref(socket_add), socket_add_len, std::ref(args));
+    for (int i = 0; i < 1; ++i) {
+//        threads.emplace_back(accept_peers, master_socket_peer, std::ref(socket_add), socket_add_len, std::ref(args));
+        accept_peers(master_socket_peer, socket_add, socket_add_len, args);
     }
-
     for (auto &t: threads) {
         t.join();
     }
@@ -71,7 +59,6 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
 [[noreturn]] void accept_peers(const int socket_fd, sockaddr_in &socket_add, const int socket_add_len, std::map<std::string, std::string> &args) {
     std::string iadd = "127.0.0.1:" + args[SYNCPORT];
     set_my_add(iadd);
-    set_peers(args[PEERS]);
 
     //  Grabbing a accept_clients from the listening queue
     while (true) {

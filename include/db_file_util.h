@@ -27,8 +27,18 @@ extern int write_message(const std::string &db_file, std::string &poster, std::s
 
 extern int replace_message(const std::string &db_file, const std::string &poster, std::string msg);
 
-extern void lock_acquire();
+extern int write_synced_message(const std::string &db_file, const std::string &msg);
 
-extern void lock_release();
+extern int replace_synced_message(const std::string &db_file, const std::string &msg);
+
+extern int undo_synced_message(const std::string &db_file);
+
+extern void read_lock_acquire();
+
+extern void read_lock_release();
+
+extern void write_lock_acquire();
+
+extern void write_lock_release();
 
 #endif //BBSERVER2_DB_FILE_UTIL_H

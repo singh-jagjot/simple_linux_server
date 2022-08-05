@@ -136,12 +136,88 @@ int replace_message(const std::string &db_file, const std::string &poster, std::
     return found ? std::stoi(msg_no) : -1;
 }
 
-void lock_acquire() {
+void read_lock_acquire() {
     read_semaphore.acquire();
+}
+
+void read_lock_release(){
+    read_semaphore.release();
+}
+
+void write_lock_acquire(){
     write_semaphore.acquire();
 }
 
-void lock_release() {
-    read_semaphore.release();
+void write_lock_release() {
     write_semaphore.release();
+}
+
+int write_synced_message(const std::string &db_file, const std::string &msg){
+    std::ofstream file(db_file, std::ios::app);
+    int res = 0;
+    if (file) {
+        file << msg << std::endl;
+    } else {
+        res = -1;
+    }
+    file.close();
+    std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
+    return  res;
+}
+
+int replace_synced_message(const std::string &db_file, const std::string &msg){
+    auto v = string_file_msg_split(msg, '/', 2);
+    auto msg_no = v[0];
+    std::fstream file(db_file);
+    std::string line, temp_msg_no, replacement = msg_no + "/" + v[2] + "/" + v[1];
+    bool found = false;
+    while (file) {
+        getline(file, line);
+        if (line.empty() or string_startswith(line, " "))
+            continue;
+        temp_msg_no = string_file_msg_split(line, '/', 1)[0];
+        if (!strcmp(temp_msg_no.data(), msg_no.data())) {
+            found = true;
+            char d[1];
+            d[0] = ' ';
+            long c_pos = (long) file.tellp();
+            long i_pos = c_pos - line.length() - 1;
+            file.seekp(i_pos);
+            for (int i = 0; i < line.length(); ++i) {
+                file.write(d, 1);
+            }
+            file.seekp(0, std::ios::end);
+            file << replacement << std::endl;
+            break;
+        }
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
+    return found ? 0 : -1;
+}
+
+int undo_synced_message(const std::string &db_file){
+    std::fstream file(db_file);
+    std::string line, temp_msg_no;
+    std::string msg_no = read_recent_line_number(db_file);
+    bool found = false;
+    while (file) {
+        getline(file, line);
+        if (line.empty() or string_startswith(line, " "))
+            continue;
+        temp_msg_no = string_file_msg_split(line, '/', 1)[0];
+        if (!strcmp(temp_msg_no.data(), msg_no.data())) {
+            found = true;
+            char d[1];
+            d[0] = ' ';
+            long c_pos = (long) file.tellp();
+            long i_pos = c_pos - line.length() - 1;
+            file.seekp(i_pos);
+            for (int i = 0; i < line.length(); ++i) {
+                file.write(d, 1);
+            }
+            break;
+        }
+    }
+    file.close();
+    return found ? 0 : -1;
 }

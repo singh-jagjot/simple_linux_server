@@ -13,7 +13,7 @@ int run_server(std::map<std::string, std::string> &args) {
 //    create_socket_peer(args);
     if(!args[PEERS].empty()) {
         printf("Peers present\n");
-        //  Creating socket accept_clients for the peers
+        //  Creating socket accept_clients for the peers_set
         std::thread t1(create_socket_peer, std::ref(args));
         std::thread t2(create_socket_client, std::ref(args));
 //        std::thread t2(create_socket_connection, "", args[DAEMON], std::stoi(args[BBPORT]), std::stoi(args[THMAX]), args[BBFILE], std::ref(handle_client));

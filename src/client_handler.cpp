@@ -12,9 +12,7 @@
 #include "../include/string_helper.h"
 
 int handle_client(const int client_fd, std::map<std::string, std::string> &args) {
-    if(get_peer_count() == 0){
-        set_peers(args[PEERS]);
-    }
+    set_peers(args[PEERS]);
 
     std::string client_name = "nobody";
     char read_buffer[BUFFER_SIZE] = {0};
@@ -24,6 +22,7 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
 
     while (true) {
         bzero(response_buffer, BUFFER_SIZE);
+        bzero(read_buffer, BUFFER_SIZE);
         long bytes_read = read(client_fd, read_buffer, BUFFER_SIZE);
         if (bytes_read < 0) {
             printf("Error while reading the read_buffer. Error No: %i", errno);
@@ -65,9 +64,10 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
             }
         } else if (string_startswith(read_buffer, CMD_WRITE)) {
             try {
-
-                start_sync();
-                continue;
+                if(!args[PEERS].empty()){
+                    start_sync(std::stoi(args[SYNCPORT]), client_name, read_buffer, client_fd);
+                    continue;
+                }
                 int res = write_message(args[BBFILE], client_name, read_buffer);
                 if (res == -1) {
                     sprintf(response_buffer, "%s Server error\n", RES_MESSAGE_WROTE_ERR);
@@ -79,6 +79,10 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
             }
         } else if (string_startswith(read_buffer, CMD_REPLACE)) {
             try {
+                if(!args[PEERS].empty()){
+                    start_sync(std::stoi(args[SYNCPORT]), client_name, read_buffer, client_fd);
+                    continue;
+                }
                 int res = replace_message(args[BBFILE], client_name, read_buffer);
                 if (res != -1) {
                     sprintf(response_buffer, "%s %i\n", RES_MESSAGE_WROTE, res);
@@ -99,7 +103,7 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
         }
         write(client_fd, response_buffer, BUFFER_SIZE);
         printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
-        bzero(read_buffer, BUFFER_SIZE);
+//        bzero(read_buffer, BUFFER_SIZE);
     }
     write(client_fd, response_buffer, BUFFER_SIZE);
     return 0;
