@@ -13,6 +13,7 @@ std::atomic<int> writers_count = 0;
 std::binary_semaphore read_semaphore{1};
 std::binary_semaphore write_semaphore{1};
 
+static std::string message_replaced;
 
 std::string read_message(const std::string &db_file, const std::string &msg) {
     read_semaphore.acquire();
@@ -178,6 +179,7 @@ int replace_synced_message(const std::string &db_file, const std::string &msg){
         temp_msg_no = string_file_msg_split(line, '/', 1)[0];
         if (!strcmp(temp_msg_no.data(), msg_no.data())) {
             found = true;
+            message_replaced = line;
             char d[1];
             d[0] = ' ';
             long c_pos = (long) file.tellp();
@@ -195,7 +197,7 @@ int replace_synced_message(const std::string &db_file, const std::string &msg){
     return found ? 0 : -1;
 }
 
-int undo_synced_message(const std::string &db_file){
+int undo_synced_write_message(const std::string &db_file){
     std::fstream file(db_file);
     std::string line, temp_msg_no;
     std::string msg_no = read_recent_line_number(db_file);
@@ -219,5 +221,32 @@ int undo_synced_message(const std::string &db_file){
         }
     }
     file.close();
+    return found ? 0 : -1;
+}
+
+int undo_synced_replace_message(const std::string &db_file){
+    auto v = string_file_msg_split(message_replaced, '/', 2);
+    auto msg_no = v[0];
+    std::fstream file(db_file);
+    std::string line, temp_msg_no;
+    bool found = false;
+    while (file) {
+        getline(file, line);
+        if (line.empty() or string_startswith(line, " "))
+            continue;
+        temp_msg_no = string_file_msg_split(line, '/', 1)[0];
+        if (!strcmp(temp_msg_no.data(), msg_no.data())) {
+            found = true;
+            char d[1];
+            d[0] = ' ';
+            long c_pos = (long) file.tellp();
+            long i_pos = c_pos - line.length() - 1;
+            file.seekp(i_pos);
+            for (int i = 0; i < line.length(); ++i) {
+                file.write(d, 1);
+            }
+            break;
+        }
+    }
     return found ? 0 : -1;
 }

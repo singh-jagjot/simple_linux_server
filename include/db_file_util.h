@@ -31,7 +31,8 @@ extern int write_synced_message(const std::string &db_file, const std::string &m
 
 extern int replace_synced_message(const std::string &db_file, const std::string &msg);
 
-extern int undo_synced_message(const std::string &db_file);
+extern int undo_synced_write_message(const std::string &db_file);
+extern int undo_synced_replace_message(const std::string &db_file);
 
 extern void read_lock_acquire();
 

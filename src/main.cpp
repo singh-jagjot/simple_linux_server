@@ -179,6 +179,12 @@ void create_daemon(){
     }
     freopen(LOG_FILE, "w+", stdout);
 }
+void print(...){
+
+}
+void std_out(){
+    fclose(stdout);
+}
 
 int main(int argc, char *argv[]) {
     int opt;
@@ -245,6 +251,10 @@ int main(int argc, char *argv[]) {
     args_map[DAEMON] = std::to_string(is_daemon);
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
+
+    if(!debug_mode){
+        std_out();
+    }
 
     printf("bbfile: %s, peers_set: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);

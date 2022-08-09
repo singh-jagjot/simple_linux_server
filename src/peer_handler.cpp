@@ -13,6 +13,8 @@
 #include "../include/peer_notify.h"
 
 static bool is_master = false;
+static bool in_progress = false;
+static bool changes_committed = false;
 int pfd;
 sockaddr_in pfd_socket_add;
 static std::set<std::string> peers_set;
@@ -84,7 +86,6 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
     printf("Socket: %i\n", pfd);
     char read_buffer[BUFFER_SIZE] = {0};
     char response_buffer[BUFFER_SIZE] = {0};
-    bool in_progress = false;
     file_path = args[BBFILE];
     std::vector<std::string> peer_msgs;
 
@@ -148,12 +149,27 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             }
         } else if(string_startswith(read_buffer, SYNC_ABORT)){
             printf("Peer: Received %s signal. Aborting and releasing locks..\n", SYNC_ABORT);
+            if(changes_committed){
+                if(is_write_msg){
+                    if(undo_synced_write_message(args[BBFILE]) != 0){
+                        printf("Peer: Some error occurred wile undoing\n");
+                    } else{
+                        printf("Peer: Undoing Success\n");
+                    }
+                } else {
+                    if(undo_synced_replace_message(args[BBFILE]) != 0){
+                        printf("Peer: Some error occurred wile undoing\n");
+                    } else{
+                        printf("Peer: Undoing Success\n");
+                    }
+                }
+            }
             set_to_default();
-            write_to_client_console(false);
         } else if(string_startswith(read_buffer, SYNC_COMMIT)){
             auto msg_vec = string_file_msg_split(read_buffer, '|', 2);
             try {
                 if(!strcmp(msg_vec[1].data(), "WRITE")){
+                    is_write_msg = true;
                     printf("Peer: %s signal received. Writing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
                     if(write_synced_message(args[BBFILE], msg_vec[2].data()) != 0){
                         throw std::runtime_error("Peer: Failed to write synced message\n");
@@ -163,6 +179,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                         } else{
                             printf("Peer: Sending %s signal to master failed\n", SYNC_COMMIT_OK);
                         }
+                        changes_committed = true;
                     }
                 } else {
                         printf("Peer: %s signal received. Replacing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
@@ -174,6 +191,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                             } else{
                                 printf("Peer: Sending %s signal to master failed\n", SYNC_COMMIT_OK);
                             }
+                            changes_committed = true;
                         }
                 }
             } catch (...){
@@ -242,10 +260,20 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             }
         } else if(string_startswith(read_buffer, SYNC_FAILED)){
             printf("Peer: Received %s signal from master. Undoing committed changes\n", SYNC_FAILED);
-            if(undo_synced_message(args[BBFILE]) != 0){
-                printf("Peer: Some error occurred wile undoing\n");
-            } else{
-                printf("Peer: Undoing Success\n");
+            if(changes_committed){
+                if(is_write_msg){
+                    if(undo_synced_write_message(args[BBFILE]) != 0){
+                        printf("Peer: Some error occurred wile undoing\n");
+                    } else{
+                        printf("Peer: Undoing Success\n");
+                    }
+                } else {
+                    if(undo_synced_replace_message(args[BBFILE]) != 0){
+                        printf("Peer: Some error occurred wile undoing\n");
+                    } else{
+                        printf("Peer: Undoing Success\n");
+                    }
+                }
             }
             set_to_default();
         } else if(string_startswith(read_buffer, SYNC_COMPLETED)){
@@ -321,6 +349,8 @@ int start_sync(int port, std::string &client, std::string msg, const int fd){
     client_name = client;
     is_master = true;
     bool go_on = false;
+    write_lock_acquire();
+    read_lock_acquire();
     if(sync_step1()){
         printf("Sync Step 1: failed\n");
     } else{
@@ -437,6 +467,8 @@ void set_to_default() {
     commit_msg.clear();
     client_name.clear();
     is_write_msg = false;
+    changes_committed = false;
+    in_progress = false;
     master_add.clear();
     master_ip.clear();
     master_port = 0;

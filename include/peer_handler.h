@@ -33,7 +33,7 @@
 #define RES_MESSAGE_WROTE "3.0 WROTE"
 #define RES_MESSAGE_WROTE_ERR "3.2 ERROR WRITE"
 #define RES_REPLACE_MESSAGE_NE "3.1 UNKNOWN"
-#define SYNC_TIMEOUT 60s
+#define PEER_SYNC_TIMEOUT 10000
 
 //extern int
 //handle_peer(int peer_fd, std::vector<std::string> &peers_add, std::vector<int> &peers_port, std::string &iadd,
