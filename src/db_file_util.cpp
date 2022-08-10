@@ -22,7 +22,7 @@ std::string read_message(const std::string &db_file, const std::string &msg) {
         write_semaphore.acquire();
     }
     read_semaphore.release();
-    printf("Readers count: %i\n", (int) readers_count);
+//    printf("Readers count: %i\n", (int) readers_count);
     std::ifstream file(db_file);
     auto msg_no = string_split(msg, ' ')[1];
     std::string line, temp_msg_no;
@@ -43,7 +43,7 @@ std::string read_message(const std::string &db_file, const std::string &msg) {
     if (readers_count == 0) {
         write_semaphore.release();
     }
-    printf("Readers count: %i\n", (int) readers_count);
+//    printf("Readers count: %i\n", (int) readers_count);
     read_semaphore.release();
     return line;
 }
@@ -76,7 +76,7 @@ std::string read_recent_line_number(const std::string &db_file){
 int write_message(const std::string &db_file, std::string &poster, std::string msg) {
     write_semaphore.acquire();
     writers_count++;
-    printf("Writers count %i\n", (int) writers_count);
+//    printf("Writers count %i\n", (int) writers_count);
     msg = string_file_msg_split(msg, ' ', 1)[1];
     std::string line = read_recent_line(db_file);
     int msg_no = line.empty() ? 0 : std::stoi(string_split(line, '/')[0]);
@@ -86,13 +86,13 @@ int write_message(const std::string &db_file, std::string &poster, std::string m
     if (file) {
         file << line << std::endl;
     } else {
-        printf("Filed to write the message!\n");
+//        printf("Filed to write the message!\n");
         msg_no = -1;
     }
     file.close();
     std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     writers_count--;
-    printf("Writers count %i\n", (int) writers_count);
+//    printf("Writers count %i\n", (int) writers_count);
     write_semaphore.release();
     return msg_no;
 }
@@ -100,12 +100,11 @@ int write_message(const std::string &db_file, std::string &poster, std::string m
 int replace_message(const std::string &db_file, const std::string &poster, std::string msg) {
     write_semaphore.acquire();
     writers_count++;
-    printf("Writers count %i\n", (int) writers_count);
+//    printf("Writers count %i\n", (int) writers_count);
     msg = string_file_msg_split(msg, ' ', 1)[1];
     auto v = string_file_msg_split(msg, '/', 1);
     auto msg_no = v[0];
     msg = v[1];
-//    std::fstream file(db_file, std::ios::out | std::ios::in);
     std::fstream file(db_file);
     std::string line, temp_msg_no, replacement = msg_no + "/" + poster + "/" + msg;
     bool found = false;
@@ -132,7 +131,7 @@ int replace_message(const std::string &db_file, const std::string &poster, std::
     file.close();
     std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     writers_count--;
-    printf("Writers count %i\n", (int) writers_count);
+//    printf("Writers count %i\n", (int) writers_count);
     write_semaphore.release();
     return found ? std::stoi(msg_no) : -1;
 }

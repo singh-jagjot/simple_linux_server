@@ -3,6 +3,7 @@
 //
 
 #include <arpa/inet.h>
+#include <cstring>
 #include <thread>
 #include <vector>
 #include "../include/common.h"
@@ -11,8 +12,12 @@
 #include "../include/string_helper.h"
 
 int master_socket_peer;
+static bool is_debug = false;
 
 void create_socket_peer(std::map<std::string, std::string> &args) {
+    if(!strcmp(args[DEBUG].data(), "1")){
+        is_debug = true;
+    }
     set_peers(args[PEERS]);
     std::vector<std::string> peers = string_split(args[PEERS], ' ');
 
@@ -38,14 +43,20 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
         printf("Binding to port %i failed. Error No: %i\n", connection_port, errno);
         exit(EXIT_FAILURE);
     }
-    printf("Binding to port %i successful.\n", connection_port);
+
+    if(is_debug){
+        printf("Binding to port %i successful.\n", connection_port);
+    }
 
     //Start listening the socket and hold max_threads connections
     if (listen(master_socket_peer, peers.size()) < 0) {
         printf("Listening on the socket failed. Error No: %i\n", errno);
         exit(EXIT_FAILURE);
     }
-    printf("Listening on the socket successful.\n");
+
+    if(is_debug){
+        printf("Listening on the socket successful.\n");
+    }
     std::vector<std::thread> threads;
     for (int i = 0; i < 1; ++i) {
 //        threads.emplace_back(accept_peers, master_socket_peer, std::ref(socket_add), socket_add_len, std::ref(args));
@@ -68,24 +79,37 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
             sleep(1);
             continue;
         }
-        printf("Master Peer FD: %i\n", peer_fd);
+        if(is_debug){
+            printf("Master Peer FD: %i\n", peer_fd);
+            printf("Peer connected\n");
+        }
 //        auto add = inet_ntoa(socket_add.sin_addr);
 //        auto port = ntohs(socket_add.sin_port);
 //        printf("Peer connected. Address: %s:%u\n", add, port);
-        printf("Peer connected\n");
-
         handle_peer(peer_fd, args);
 
         //closing the connected socket
         shutdown(peer_fd, SHUT_RDWR);
         close(peer_fd);
 //        printf("Peer disconnected. Address: %s:%i\n", add, port);
-        printf("Peer disconnected\n");
+        if(is_debug){
+            printf("Peer disconnected\n");
+        }
     }
 }
 
 void master_socket_peer_close() {
-    shutdown(master_socket_peer, SHUT_RDWR);
-    close(master_socket_peer);
-    printf("Peer master socket closed.\n");
+//Closing the master_peer_socket
+    if(is_debug){
+        if(shutdown(master_socket_peer, SHUT_RD) == -1){
+            printf("Error while shutting down the master_socket_peer\n");
+        } else {
+            printf("Success: Shutting down the master_socket_peer\n");
+        }
+        if(close(master_socket_peer) == -1){
+            printf("Error while closing the master_socket_peer\n");
+        } else{
+            printf("Success: Closing the master_socket_peer\n");
+        }
+    }
 }

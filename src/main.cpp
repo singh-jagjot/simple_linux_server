@@ -94,7 +94,9 @@ void write_pid(){
 //        file << "PID: " << getpid() << "\nPPID: " << getppid() << std::endl;
         file << getpid() <<std::endl;
     } else {
-        printf("Unable to create/write %s\n", PID_FILE);
+        if(debug_mode){
+            printf("Unable to create/write %s\n", PID_FILE);
+        }
     }
     file.close();
 }
@@ -119,7 +121,6 @@ void sighup_handler(int signum) {
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
     args_map[SYNCPORT] = std::to_string(sp);
-    args_map[BBPORT] = std::to_string(bp);
     args_map[BBPORT] = std::to_string(bp);
 //    if(strcmp(args_map[BBPORT].data(), std::to_string(bp).data()) != 0){
 //        args_map[BBPORT] = std::to_string(bp);
@@ -178,12 +179,6 @@ void create_daemon(){
         close (x);
     }
     freopen(LOG_FILE, "w+", stdout);
-}
-void print(...){
-
-}
-void std_out(){
-    fclose(stdout);
 }
 
 int main(int argc, char *argv[]) {
@@ -252,12 +247,10 @@ int main(int argc, char *argv[]) {
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
 
-    if(!debug_mode){
-        std_out();
+    if(debug_mode){
+        printf("bbfile: %s, peers_set: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
+               bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
     }
-
-    printf("bbfile: %s, peers_set: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
-           bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
 
     if(is_daemon){
         create_daemon();

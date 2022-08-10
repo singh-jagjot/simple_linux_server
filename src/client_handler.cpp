@@ -11,9 +11,13 @@
 #include "../include/peer_handler.h"
 #include "../include/string_helper.h"
 
-int handle_client(const int client_fd, std::map<std::string, std::string> &args) {
-    set_peers(args[PEERS]);
+static bool is_debug = false;
 
+int handle_client(const int client_fd, std::map<std::string, std::string> &args) {
+    if(!strcmp(args[DEBUG].data(), "1")){
+        is_debug = true;
+    }
+    set_peers(args[PEERS]);
     std::string client_name = "nobody";
     char read_buffer[BUFFER_SIZE] = {0};
     char response_buffer[BUFFER_SIZE] = {0};
@@ -30,7 +34,9 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
         }
 
         if (bytes_read == 0){
-            printf("Client exited abruptly\n");
+            if(is_debug){
+                printf("Client exited abruptly\n");
+            }
             break;
         }
 
@@ -43,7 +49,9 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
                     sprintf(response_buffer, "%s Invalid usage or characters!\n", RES_USER_ERR);
                 } else {
                     client_name = string_strip(temp);
-                    printf("Client: %s\n", client_name.data());
+                    if(is_debug){
+                        printf("Client: %s\n", client_name.data());
+                    }
                     sprintf(response_buffer, "%s %s Welcome!\n", RES_USER_GREETING, client_name.data());
                 }
             } catch (...) {
@@ -95,14 +103,18 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
             }
         } else if (string_startswith(read_buffer, CMD_QUIT)) {
             sprintf(response_buffer, "%s %s!\n", RES_QUIT, client_name.data());
-            printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
+            if(is_debug){
+                printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
+            }
             break;
         } else {
             sprintf(response_buffer, "%s%s", "Invalid cmd!", RES_USAGE);
-            printf("%s", response_buffer);
+//            printf("%s", response_buffer);
         }
         write(client_fd, response_buffer, BUFFER_SIZE);
-        printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
+        if(is_debug){
+            printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
+        }
 //        bzero(read_buffer, BUFFER_SIZE);
     }
     write(client_fd, response_buffer, BUFFER_SIZE);

@@ -45,19 +45,19 @@ extern void set_peers(std::string &peers);
 
 extern void set_my_add(std::string &iadd);
 
-extern long get_peer_count();
-
-extern void master_set();
-
-extern void master_unset();
+//extern long get_peer_count();
+//
+//extern void master_set();
+//
+//extern void master_unset();
 
 //extern int write_operation(std::string &msg);
 
-extern void set_pfd_socket_add(sockaddr_in &socket_add);
+//extern void set_pfd_socket_add(sockaddr_in &socket_add);
 
-extern void set_pfd(int fd);
+//extern void set_pfd(int fd);
 
-void wait(int duration);
+//void wait(int duration);
 
 int start_sync(int port, std::string &client_name, std::string msg, int client_fd);
 
@@ -65,7 +65,7 @@ void write_to_client_console(bool no_error);
 
 void set_to_default();
 
-int sync_step2();
+//int sync_step2();
 
 std::string ready_response(const std::string &cmd);
 

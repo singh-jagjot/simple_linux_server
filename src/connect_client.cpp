@@ -3,16 +3,20 @@
 //
 #include <thread>
 #include <vector>
+#include <cstring>
 #include <unistd.h>
 #include "../include/common.h"
 #include "../include/client_handler.h"
 #include "../include/connect_client.h"
 
 int master_socket_client;
-
+static bool is_debug = false;
 //void create_socket_connection(std::string address, std::string is_daemon, int port, int max_threads, const std::string &file_path,
 //                              int (*handle)(const int &master_socket_client, const std::string &file_path, sockaddr_in &socket_add)) {
 void create_socket_client(std::map<std::string, std::string> &args) {
+    if(!strcmp(args[DEBUG].data(), "1")){
+        is_debug = true;
+    }
     //    Creating a IPv4 and TCP socket
     master_socket_client = socket(AF_INET, SOCK_STREAM, 0);
     if (master_socket_client == -1) {
@@ -70,7 +74,7 @@ void create_socket_client(std::map<std::string, std::string> &args) {
 //  Grabbing a accept_clients from the listening queue
     while (true) {
         int new_socket = accept(socket_fd, (struct sockaddr *) &socket_add, (socklen_t *) &socket_add_len);
-        if (new_socket < 0) {
+        if (new_socket == -1) {
             printf("Grabbing a accept_clients failed. Error No: %i\n", errno);
 //            exit(EXIT_FAILURE);
             sleep(1);
@@ -79,18 +83,32 @@ void create_socket_client(std::map<std::string, std::string> &args) {
         // Setting option to reuse the socket
         int reuse = 1;
         setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT | SO_REUSEADDR, &reuse, sizeof(reuse));
-        printf("Client connected\n");
+        if(is_debug){
+            printf("Client connected\n");
+        }
         handle_client(new_socket, args);
 
 //      closing the connected socket
         shutdown(new_socket, SHUT_RDWR);
         close(new_socket);
-        printf("Client disconnected\n");
+        if(is_debug){
+            printf("Client disconnected\n");
+        }
     }
 }
 
 void master_socket_close(){
 //  closing the listening socket
-    shutdown(master_socket_client, SHUT_RDWR);
-    close(master_socket_client);
+    if(is_debug){
+        if(shutdown(master_socket_client, SHUT_RD) == -1){
+            printf("Error while shutting down the master_socket_client\n");
+        } else {
+            printf("Success: Shutting down the master_socket_client\n");
+        }
+        if(close(master_socket_client) == -1){
+            printf("Error while closing the master_socket_client\n");
+        } else{
+            printf("Success: Closing the master_socket_client\n");
+        }
+    }
 }

@@ -32,14 +32,15 @@ static std::string master_ip;
 static int master_port;
 static int client_fd;
 std::string file_path;
+static bool is_debug = false;
 
-void set_pfd(const int fd){
-    pfd = fd;
-}
-
-void set_pfd_socket_add(sockaddr_in &socket_add){
-    pfd_socket_add = socket_add;
-}
+//void set_pfd(const int fd){
+//    pfd = fd;
+//}
+//
+//void set_pfd_socket_add(sockaddr_in &socket_add){
+//    pfd_socket_add = socket_add;
+//}
 
 void set_peers(std::string &p){
     if(!peers_set.empty()){
@@ -67,9 +68,9 @@ void set_peers(std::string &p){
 //    peers_port_vec = peers_port;
 }
 
-long get_peer_count(){
-    return peers_set.size();
-}
+//long get_peer_count(){
+//    return peers_set.size();
+//}
 
 void set_my_add(std::string &iadd){
     my_add = iadd;
@@ -82,8 +83,14 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
 //    if(peers_set.empty()){
 //        set_peers(args[PEERS]);
 //    }
+    if(!strcmp(args[DEBUG].data(), "1")){
+        is_debug = true;
+    }
+
     pfd = peer_fd;
-    printf("Socket: %i\n", pfd);
+    if(is_debug){
+        printf("Socket: %i\n", pfd);
+    }
     char read_buffer[BUFFER_SIZE] = {0};
     char response_buffer[BUFFER_SIZE] = {0};
     file_path = args[BBFILE];
@@ -98,10 +105,14 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             exit(EXIT_FAILURE);
         }
         if (bytes_read == 0){
-            printf("Peer exited abruptly\n");
+            if(is_debug){
+                printf("Peer exited abruptly\n");
+            }
             break;
         }
-        printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
+        if(is_debug){
+            printf("Bytes read: %li, Message: %s", bytes_read, read_buffer);
+        }
 
         if(string_startswith(read_buffer, SYNC_START)) {
             try {
@@ -112,21 +123,33 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                 master_port = std::stoi(v[1]);
                 read_lock_acquire();
                 write_lock_acquire();
-                printf("Peer: Read and Write lock acquired\n");
+                if(is_debug){
+                    printf("Peer: Read and Write lock acquired\n");
+                }
                 if(send_to_peer(master_ip, master_port, ready_response(SYNC_ACK_OK)) == -1){
                     throw std::runtime_error("Peer: Failed to send acknowledgement\n");
                 } else{
-                    printf("Peer: Sent %s signal to the master\n", SYNC_ACK_OK);
+                    if(is_debug){
+                        printf("Peer: Sent %s signal to the master\n", SYNC_ACK_OK);
+                    }
                 }
             } catch (...) {
-                printf("Peer: Failed to send %s signal to the master\n", SYNC_ACK_OK);
+                if(is_debug){
+                    printf("Peer: Failed to send %s signal to the master\n", SYNC_ACK_OK);
+                }
             }
         } else if (string_startswith(read_buffer, SYNC_ACK_FAIL)){
-            printf("Master: Received %s signal from peer: %s, Aborting\n", SYNC_ACK_FAIL, string_split(read_buffer, '|')[1].data());
+            if(is_debug){
+                printf("Master: Received %s signal from peer: %s, Aborting\n", SYNC_ACK_FAIL, string_split(read_buffer, '|')[1].data());
+            }
             if(send_to_all(peers_set, ready_response(SYNC_ABORT)) != 0){
-                printf("Master: Some error occurred while sending %s signal\n", SYNC_ABORT);
+                if(is_debug){
+                    printf("Master: Some error occurred while sending %s signal\n", SYNC_ABORT);
+                }
             } else {
-                printf("Master: Aborting Success\n");
+                if(is_debug){
+                    printf("Master: Aborting Success\n");
+                }
             }
             write_to_client_console(false);
             set_to_default();
@@ -134,33 +157,51 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             auto vec = string_split(read_buffer, '|');
             auto peer_ipv4 = vec[1];
             auto peer_resent_msg_no = std::stoi(vec[2]);
-            printf("Master: Received %s signal from peer %s\n", SYNC_ACK_OK, peer_ipv4.data());
+            if(is_debug){
+                printf("Master: Received %s signal from peer %s\n", SYNC_ACK_OK, peer_ipv4.data());
+            }
             if(peers_set.contains(peer_ipv4)){
                 peers_with_ack.insert(peer_ipv4);
                 msg_no = msg_no > peer_resent_msg_no ? msg_no : peer_resent_msg_no;
             }
             if(peers_with_ack.size() == peers_set.size()){
-                printf("Master: Received %s signal from all the peers_set. Sending %s signal\n", SYNC_ACK_OK, SYNC_COMMIT);
+                if(is_debug){
+                    printf("Master: Received %s signal from all the peers_set. Sending %s signal\n", SYNC_ACK_OK, SYNC_COMMIT);
+                }
                 if(send_to_all(peers_set, ready_response(SYNC_COMMIT)) != 0){
-                    printf("Master: Some error occurred while sending %s signal\n", SYNC_COMMIT);
+                    if(is_debug){
+                        printf("Master: Some error occurred while sending %s signal\n", SYNC_COMMIT);
+                    }
                 } else {
-                    printf("Master: Committing Success\n");
+                    if(is_debug){
+                        printf("Master: Committing Success\n");
+                    }
                 }
             }
         } else if(string_startswith(read_buffer, SYNC_ABORT)){
-            printf("Peer: Received %s signal. Aborting and releasing locks..\n", SYNC_ABORT);
+            if(is_debug){
+                printf("Peer: Received %s signal. Aborting and releasing locks..\n", SYNC_ABORT);
+            }
             if(changes_committed){
                 if(is_write_msg){
                     if(undo_synced_write_message(args[BBFILE]) != 0){
-                        printf("Peer: Some error occurred wile undoing\n");
+                        if(is_debug){
+                            printf("Peer: Some error occurred wile undoing\n");
+                        }
                     } else{
-                        printf("Peer: Undoing Success\n");
+                        if(is_debug){
+                            printf("Peer: Undoing Success\n");
+                        }
                     }
                 } else {
                     if(undo_synced_replace_message(args[BBFILE]) != 0){
-                        printf("Peer: Some error occurred wile undoing\n");
+                        if(is_debug){
+                            printf("Peer: Some error occurred wile undoing\n");
+                        }
                     } else{
-                        printf("Peer: Undoing Success\n");
+                        if(is_debug){
+                            printf("Peer: Undoing Success\n");
+                        }
                     }
                 }
             }
@@ -170,117 +211,181 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             try {
                 if(!strcmp(msg_vec[1].data(), "WRITE")){
                     is_write_msg = true;
-                    printf("Peer: %s signal received. Writing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
+                    if(is_debug){
+                        printf("Peer: %s signal received. Writing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
+                    }
                     if(write_synced_message(args[BBFILE], msg_vec[2].data()) != 0){
                         throw std::runtime_error("Peer: Failed to write synced message\n");
                     } else {
                         if(send_to_peer(master_ip, master_port, ready_response(SYNC_COMMIT_OK)) != -1){
-                            printf("Peer: Sent %s signal to master\n", SYNC_COMMIT_OK);
+                            if(is_debug){
+                                printf("Peer: Sent %s signal to master\n", SYNC_COMMIT_OK);
+                            }
                         } else{
-                            printf("Peer: Sending %s signal to master failed\n", SYNC_COMMIT_OK);
+                            if(is_debug){
+                                printf("Peer: Sending %s signal to master failed\n", SYNC_COMMIT_OK);
+                            }
                         }
                         changes_committed = true;
                     }
                 } else {
+                    if(is_debug){
                         printf("Peer: %s signal received. Replacing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
+                    }
                         if(replace_synced_message(args[BBFILE], msg_vec[2].data()) != 0){
                             throw std::runtime_error("Peer: Failed to replace synced message\n");
                         } else {
                             if(send_to_peer(master_ip, master_port, ready_response(SYNC_COMMIT_OK)) != -1){
-                                printf("Peer: Sent %s signal to master\n", SYNC_COMMIT_OK);
+                                if(is_debug){
+                                    printf("Peer: Sent %s signal to master\n", SYNC_COMMIT_OK);
+                                }
                             } else{
-                                printf("Peer: Sending %s signal to master failed\n", SYNC_COMMIT_OK);
+                                if(is_debug){
+                                    printf("Peer: Sending %s signal to master failed\n", SYNC_COMMIT_OK);
+                                }
                             }
                             changes_committed = true;
                         }
                 }
             } catch (...){
-                printf("Peer: Some error occurred while committing the msg: %s\n", msg_vec[2].data());
+                if(is_debug){
+                    printf("Peer: Some error occurred while committing the msg: %s\n", msg_vec[2].data());
+                }
                 if(send_to_peer(master_ip, master_port, ready_response(SYNC_COMMIT_FAIL))  == -1){
-                    printf("Peer: Sending %s signal to the master failed\n", SYNC_COMMIT_FAIL);
+                    if(is_debug){
+                        printf("Peer: Sending %s signal to the master failed\n", SYNC_COMMIT_FAIL);
+                    }
                 } else{
-                    printf("Peer: Sent %s signal to the master\n", SYNC_COMMIT_FAIL);
+                    if(is_debug){
+                        printf("Peer: Sent %s signal to the master\n", SYNC_COMMIT_FAIL);
+                    }
                 }
                 set_to_default();
             }
         } else if(string_startswith(read_buffer, SYNC_COMMIT_FAIL)){
-            printf("Master: %s signal received from peer %s\n", SYNC_COMMIT_FAIL, string_split(read_buffer, '|')[1].data());
+            if(is_debug){
+                printf("Master: %s signal received from peer %s\n", SYNC_COMMIT_FAIL, string_split(read_buffer, '|')[1].data());
+            }
             if(send_to_all(peers_set, ready_response(SYNC_FAILED)) != 0){
-                printf("Master: Some error occurred while sending %s signal\n", SYNC_FAILED);
+                if(is_debug){
+                    printf("Master: Some error occurred while sending %s signal\n", SYNC_FAILED);
+                }
             } else{
-                printf("Master: Sent %s signal to all peers_set", SYNC_FAILED);
+                if(is_debug){
+                    printf("Master: Sent %s signal to all peers_set", SYNC_FAILED);
+                }
             }
             set_to_default();
             write_to_client_console(false);
         } else if(string_startswith(read_buffer, SYNC_COMMIT_OK)){
             auto peer_ipv4 = string_split(read_buffer, '|')[1];
-            printf("Master: Received %s signal form the peer %s\n", SYNC_COMMIT_OK, peer_ipv4.data());
+            if(is_debug){
+                printf("Master: Received %s signal form the peer %s\n", SYNC_COMMIT_OK, peer_ipv4.data());
+            }
             if(peers_set.contains(peer_ipv4)) {
                 peers_with_commit.insert(peer_ipv4);
             }
             if(peers_with_commit.size() == peers_set.size()){
-                printf("Master: Received %s signal from all the peers_set\n", SYNC_COMMIT_OK);
+                if(is_debug){
+                    printf("Master: Received %s signal from all the peers_set\n", SYNC_COMMIT_OK);
+                }
                 try {
                     if(is_write_msg){
-                        printf("Master: Writing %s to file\n", commit_msg.data());
+                        if(is_debug){
+                            printf("Master: Writing %s to file\n", commit_msg.data());
+                        }
                         if(write_synced_message(args[BBFILE], commit_msg) != 0){
                             throw std::runtime_error("Master: Failed to write synced message\n");
                         } else {
-                            printf("Master: Committing to file completed\n");
+                            if(is_debug){
+                                printf("Master: Committing to file completed\n");
+                            }
                             if(send_to_all(peers_set, ready_response(SYNC_COMPLETED)) != 0){
-                                printf("Master: Some error occurred while sending %s signal\n", SYNC_COMPLETED);
+                                if(is_debug){
+                                    printf("Master: Some error occurred while sending %s signal\n", SYNC_COMPLETED);
+                                }
                             } else {
-                                printf("Master: Sent %s signal to all peers_set\n", SYNC_COMPLETED);
+                                if(is_debug){
+                                    printf("Master: Sent %s signal to all peers_set\n", SYNC_COMPLETED);
+                                }
                             }
                         }
                     } else{
-                        printf("Master: Replacing %s to file\n", commit_msg.data());
+                        if(is_debug){
+                            printf("Master: Replacing %s to file\n", commit_msg.data());
+                        }
                         if(replace_synced_message(args[BBFILE], commit_msg) != 0){
                             throw std::runtime_error("Master: Failed to replace synced message\n");
                         } else {
-                            printf("Master: Committing to file completed\n");
+                            if(is_debug){
+                                printf("Master: Committing to file completed\n");
+                            }
                             if(send_to_all(peers_set, ready_response(SYNC_COMPLETED)) != 0){
-                                printf("Master: Some error occurred while sending %s signal\n", SYNC_COMPLETED);
+                                if(is_debug){
+                                    printf("Master: Some error occurred while sending %s signal\n", SYNC_COMPLETED);
+                                }
                             } else {
-                                printf("Master: Sent %s signal to all peers_set\n", SYNC_COMPLETED);
+                                if(is_debug){
+                                    printf("Master: Sent %s signal to all peers_set\n", SYNC_COMPLETED);
+                                }
                             }
                         }
                     }
                     write_to_client_console(true);
                 } catch (...) {
-                    printf("Master: Some error occurred while committing the msg: %s\n", commit_msg.data());
+                    if(is_debug){
+                        printf("Master: Some error occurred while committing the msg: %s\n", commit_msg.data());
+                    }
                     if(send_to_all(peers_set, ready_response(SYNC_FAILED)) != 0){
-                        printf("Master: Some error occurred while sending %s signal to peers_set\n", SYNC_FAILED);
+                        if(is_debug){
+                            printf("Master: Some error occurred while sending %s signal to peers_set\n", SYNC_FAILED);
+                        }
                     } else {
-                        printf("Master: Sent %s signal to peers_set\n", SYNC_FAILED);
+                        if(is_debug){
+                            printf("Master: Sent %s signal to peers_set\n", SYNC_FAILED);
+                        }
                     }
                     write_to_client_console(false);
                 }
                 set_to_default();
             }
         } else if(string_startswith(read_buffer, SYNC_FAILED)){
-            printf("Peer: Received %s signal from master. Undoing committed changes\n", SYNC_FAILED);
+            if(is_debug){
+                printf("Peer: Received %s signal from master. Undoing committed changes\n", SYNC_FAILED);
+            }
             if(changes_committed){
                 if(is_write_msg){
                     if(undo_synced_write_message(args[BBFILE]) != 0){
-                        printf("Peer: Some error occurred wile undoing\n");
+                        if(is_debug){
+                            printf("Peer: Some error occurred wile undoing\n");
+                        }
                     } else{
-                        printf("Peer: Undoing Success\n");
+                        if(is_debug){
+                            printf("Peer: Undoing Success\n");
+                        }
                     }
                 } else {
                     if(undo_synced_replace_message(args[BBFILE]) != 0){
-                        printf("Peer: Some error occurred wile undoing\n");
+                        if(is_debug){
+                            printf("Peer: Some error occurred wile undoing\n");
+                        }
                     } else{
-                        printf("Peer: Undoing Success\n");
+                        if(is_debug){
+                            printf("Peer: Undoing Success\n");
+                        }
                     }
                 }
             }
             set_to_default();
         } else if(string_startswith(read_buffer, SYNC_COMPLETED)){
-            printf("%s: lock released\n", SYNC_COMPLETED);
+            if(is_debug){
+                printf("%s: lock released\n", SYNC_COMPLETED);
+            }
             set_to_default();
         } else if(string_startswith(read_buffer, QUIT)){
-            printf("Peer exiting\n");
+            if(is_debug){
+                printf("Peer exiting\n");
+            }
             break;
         } else {
             sprintf(response_buffer,"Invalid cmd: %s\n", read_buffer);
@@ -290,57 +395,59 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
     return 1;
 }
 
-void master_set(){
-    is_master = true;
-}
-
-void master_unset(){
-    is_master = false;
-}
+//void master_set(){
+//    is_master = true;
+//}
+//
+//void master_unset(){
+//    is_master = false;
+//}
 
 //Step 1: Notify for sync
-int sync_step1(){
-    printf("Peers set size: %zu\n", peers_set.size());
-    for(auto &peer: peers_set){
-        auto vec = string_split(peer, ':');
-        auto add = vec[0];
-        auto port = std::stoi(vec[1]);
-        if(send_to_peer(add, port, ready_response(SYNC_START)) == -1){
-            return -1;
-        }
-    }
+//int sync_step1(){
+//    if(is_debug){
+//        printf("Peers set size: %zu\n", peers_set.size());
+//    }
+//    for(auto &peer: peers_set){
+//        auto vec = string_split(peer, ':');
+//        auto add = vec[0];
+//        auto port = std::stoi(vec[1]);
+//        if(send_to_peer(add, port, ready_response(SYNC_START)) == -1){
+//            return -1;
+//        }
+//    }
 //    printf("Step 1 returned 0\n");
-    return 0;
-}
+//    return 0;
+//}
 
 //Step 2: Wait for acknowledgement
-int sync_step2(){
-    struct pollfd p[1];
-    p[0].fd = pfd;
-    p[0].events = POLLIN;
-    printf("Monitored FD: %i\n", pfd);
-    char read_buffer[BUFFER_SIZE] = {0};
-    int events_num = poll(p, 1, 10000);
-    if(events_num == 0){
-        printf("Wait timed out for acknowledgments\n");
-    } else {
-        int pollin_happened = p[0].revents & POLLIN;
-        if(pollin_happened){
-            long bytes_read = read(p[0].fd, read_buffer, BUFFER_SIZE);
-            if (bytes_read < 0) {
-                printf("Error while reading the read_buffer. Error No: %i\n", errno);
-                return -1;
-            }
-            printf("Polled: %s\n", read_buffer);
-            printf("Step 2 returning: 0\n");
-            return 0;
-        } else {
-            printf("System error occurred: %d\n", p[0].revents);
-        }
-    }
-    printf("Step 2 returning: -1\n");
-    return -1;
-}
+//int sync_step2(){
+//    struct pollfd p[1];
+//    p[0].fd = pfd;
+//    p[0].events = POLLIN;
+//    printf("Monitored FD: %i\n", pfd);
+//    char read_buffer[BUFFER_SIZE] = {0};
+//    int events_num = poll(p, 1, 10000);
+//    if(events_num == 0){
+//        printf("Wait timed out for acknowledgments\n");
+//    } else {
+//        int pollin_happened = p[0].revents & POLLIN;
+//        if(pollin_happened){
+//            long bytes_read = read(p[0].fd, read_buffer, BUFFER_SIZE);
+//            if (bytes_read < 0) {
+//                printf("Error while reading the read_buffer. Error No: %i\n", errno);
+//                return -1;
+//            }
+//            printf("Polled: %s\n", read_buffer);
+//            printf("Step 2 returning: 0\n");
+//            return 0;
+//        } else {
+//            printf("System error occurred: %d\n", p[0].revents);
+//        }
+//    }
+//    printf("Step 2 returning: -1\n");
+//    return -1;
+//}
 
 int start_sync(int port, std::string &client, std::string msg, const int fd){
     is_write_msg = string_startswith(msg, CMD_WRITE);
@@ -348,18 +455,28 @@ int start_sync(int port, std::string &client, std::string msg, const int fd){
     commit_msg = string_file_msg_split(msg, ' ', 1)[1];
     client_name = client;
     is_master = true;
-    bool go_on = false;
+//    bool go_on = false;
     write_lock_acquire();
     read_lock_acquire();
-    if(sync_step1()){
-        printf("Sync Step 1: failed\n");
-    } else{
-        printf("Sync Step 1: success\n");
-        go_on = true;
+    if(is_debug){
+        printf("Peers set size: %zu\n", peers_set.size());
     }
+    for(auto &peer: peers_set){
+        auto vec = string_split(peer, ':');
+        auto p_add = vec[0];
+        auto p_port = std::stoi(vec[1]);
+        if(send_to_peer(p_add, p_port, ready_response(SYNC_START)) == -1){
+            return -1;
+        }
+    }
+//    if(sync_step1()){
+//        printf("Sync Step 1: failed\n");
+//    } else{
+//        printf("Sync Step 1: success\n");
+//        go_on = true;
+//    }
 //Todo Remove deadlock here(if one of the peers exit abruptly)
 //Todo Implement timeout
-//Todo Don't display debugging messages if no flag provided
 
 //    if(go_on && !pfd){
 //        try {
@@ -407,9 +524,9 @@ int start_sync(int port, std::string &client, std::string msg, const int fd){
 //        }
 //    }
 
-    shutdown(pfd, SHUT_RDWR);
-    close(pfd);
-    is_master = false;
+//    shutdown(pfd, SHUT_RDWR);
+//    close(pfd);
+//    is_master = false;
     return 0;
 }
 
