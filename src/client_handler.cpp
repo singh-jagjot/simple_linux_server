@@ -13,6 +13,11 @@
 
 static bool is_debug = false;
 
+//Method to handle Client related Protocol
+//This uses the macros defined in
+//client_handler.h header file
+//to compare the user input and perform
+//the related function.
 int handle_client(const int client_fd, std::map<std::string, std::string> &args) {
     if(!strcmp(args[DEBUG].data(), "1")){
         is_debug = true;

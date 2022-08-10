@@ -9,6 +9,7 @@
 #include "../include/peer_notify.h"
 #include "../include/string_helper.h"
 
+//Method to send the message/signal to a particular peer
 long send_to_peer(std::string ip, int port, std::string msg){
     try {
         //    Creating a IPv4 and TCP socket
@@ -99,6 +100,7 @@ long send_to_peer(std::string ip, int port, std::string msg){
 //    }
 //}
 
+//Send signal/message to all the peers
 long send_to_all(std::set<std::string> &peers, const std::string& msg) {
     bool is_fail = false;
     for(auto &peer: peers){

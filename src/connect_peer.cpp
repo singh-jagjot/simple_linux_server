@@ -14,6 +14,8 @@
 int master_socket_peer;
 static bool is_debug = false;
 
+//Method to creat the peer master socket to accept
+//peers for communication.
 void create_socket_peer(std::map<std::string, std::string> &args) {
     if(!strcmp(args[DEBUG].data(), "1")){
         is_debug = true;
@@ -67,6 +69,7 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
     }
 }
 
+// To keep on accepting new peers.
 [[noreturn]] void accept_peers(const int socket_fd, sockaddr_in &socket_add, const int socket_add_len, std::map<std::string, std::string> &args) {
     std::string iadd = "127.0.0.1:" + args[SYNCPORT];
     set_my_add(iadd);
@@ -76,7 +79,7 @@ void create_socket_peer(std::map<std::string, std::string> &args) {
         int peer_fd = accept(socket_fd, (struct sockaddr *) &socket_add, (socklen_t *) &socket_add_len);
         if (peer_fd < 0) {
             printf("Failed to accept peer. Error No: %i\n", errno);
-            sleep(1);
+            sleep(1); //To make sure program doesn't exit after receiving SIGHUP.
             continue;
         }
         if(is_debug){

@@ -15,6 +15,7 @@ std::binary_semaphore write_semaphore{1};
 
 static std::string message_replaced;
 
+//This file has all the database related functions defined.
 std::string read_message(const std::string &db_file, const std::string &msg) {
     read_semaphore.acquire();
     readers_count++;

@@ -4,6 +4,9 @@
 
 #include "../include/string_helper.h"
 
+//This class contains extended string related functionality used extensively in the code.
+//Below methods are self defined.
+
 bool string_startswith(const std::string& main_str, const std::string& comp_str) {
     for (int i = 0; i < comp_str.length(); ++i) {
         if (comp_str[i] != main_str[i])
@@ -33,6 +36,7 @@ std::vector<std::string> string_split(const std::string& s, char token) {
     return v;
 }
 
+//Splitting the string 's' based on the 'token' only till occurrence 'occur' times.
 std::vector<std::string> string_file_msg_split(const std::string& s, char token, int occur) {
     std::vector<std::string> v;
     std::string temp;
@@ -55,6 +59,7 @@ std::vector<std::string> string_file_msg_split(const std::string& s, char token,
     return v;
 }
 
+//Removing the leading and tailing space from str
 std::string string_strip(std::string& str) {
     int start, end;
     for (int i = 0; i < str.length(); ++i) {

@@ -11,8 +11,9 @@
 
 int master_socket_client;
 static bool is_debug = false;
-//void create_socket_connection(std::string address, std::string is_daemon, int port, int max_threads, const std::string &file_path,
-//                              int (*handle)(const int &master_socket_client, const std::string &file_path, sockaddr_in &socket_add)) {
+
+//Method to create the master client socket to accept
+//client for communication.
 void create_socket_client(std::map<std::string, std::string> &args) {
     if(!strcmp(args[DEBUG].data(), "1")){
         is_debug = true;
@@ -70,6 +71,7 @@ void create_socket_client(std::map<std::string, std::string> &args) {
     }
 }
 
+// To keep on accepting new clients.
 [[noreturn]] void accept_clients(int &socket_fd, sockaddr_in &socket_add, int &socket_add_len, std::map<std::string, std::string> &args) {
 //  Grabbing a accept_clients from the listening queue
     while (true) {
@@ -77,7 +79,7 @@ void create_socket_client(std::map<std::string, std::string> &args) {
         if (new_socket == -1) {
             printf("Grabbing a accept_clients failed. Error No: %i\n", errno);
 //            exit(EXIT_FAILURE);
-            sleep(1);
+            sleep(1); //To make sure program doesn't exit after receiving SIGHUP.
             continue;
         }
         // Setting option to reuse the socket

@@ -10,8 +10,8 @@
 #include "../include/server.h"
 #include "../include/string_helper.h"
 
+//Main method that handles teh server control.
 int run_server(std::map<std::string, std::string> &args) {
-//    create_socket_peer(args);
     if(!args[PEERS].empty()) {
         if(!strcmp(args[DEBUG].data(), "1")){
             printf("Peers present\n");
@@ -19,12 +19,9 @@ int run_server(std::map<std::string, std::string> &args) {
         //  Creating socket accept_clients for the peers_set
         std::thread t1(create_socket_peer, std::ref(args));
         std::thread t2(create_socket_client, std::ref(args));
-//        std::thread t2(create_socket_connection, "", args[DAEMON], std::stoi(args[BBPORT]), std::stoi(args[THMAX]), args[BBFILE], std::ref(handle_client));
         t1.join();
         t2.join();
     } else{
-        //  Creating socket accept_clients for the clients
-//        create_socket_connection("", args[DAEMON], std::stoi(args[BBPORT]), std::stoi(args[THMAX]), args[BBFILE], &handle_client);
         create_socket_client(args);
     }
 

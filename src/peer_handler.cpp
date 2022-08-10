@@ -25,22 +25,12 @@ static std::string commit_msg;
 static std::string client_name;
 static bool is_write_msg;
 std::string my_add;
-//std::string my_ip;
-//std::string my_port;
 static std::string master_add;
 static std::string master_ip;
 static int master_port;
 static int client_fd;
 std::string file_path;
 static bool is_debug = false;
-
-//void set_pfd(const int fd){
-//    pfd = fd;
-//}
-//
-//void set_pfd_socket_add(sockaddr_in &socket_add){
-//    pfd_socket_add = socket_add;
-//}
 
 void set_peers(std::string &p){
     if(!peers_set.empty()){
@@ -79,10 +69,13 @@ void set_my_add(std::string &iadd){
 //    my_port = ip_vec[1];
 }
 
+//Method to handle Peer related Protocol
+//This uses the macros defined in
+//peer_handler.h header file
+//to compare the user input and perform
+//the related function.
 int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
-//    if(peers_set.empty()){
-//        set_peers(args[PEERS]);
-//    }
+
     if(!strcmp(args[DEBUG].data(), "1")){
         is_debug = true;
     }
@@ -530,6 +523,7 @@ int start_sync(int port, std::string &client, std::string msg, const int fd){
     return 0;
 }
 
+//Method to ready the peer response based on the signal received.
 std::string ready_response(const std::string& cmd){
     char buffer[BUFFER_SIZE] = {0};
     if (!strcmp(SYNC_START, cmd.data())){
@@ -562,6 +556,7 @@ std::string ready_response(const std::string& cmd){
     return buffer;
 }
 
+//Method to write on the client console based on whether it's ERROR or SUCCESS message
 void write_to_client_console(bool no_error) {
     char temp_buffer[BUFFER_SIZE] = {0};
     if(no_error){
@@ -577,6 +572,7 @@ void write_to_client_console(bool no_error) {
     write(client_fd, temp_buffer, BUFFER_SIZE);
 }
 
+//Method to set all the values to the default.
 void set_to_default() {
     peers_with_ack.clear();
     peers_with_commit.clear();

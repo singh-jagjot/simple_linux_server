@@ -29,6 +29,7 @@ std::map<std::string, std::string> args_map;
 
 void create_daemon();
 
+//Method to read config file
 void read_config() {
     std::ifstream config_in(config_file);
 
@@ -81,12 +82,13 @@ void read_config() {
         }
     } else {
         printf("Failed to open %s\n Error code: %i", config_file.data(), errno);
-        exit(EXIT_FAILURE);
+//        exit(EXIT_FAILURE);
     }
 
     config_in.close();
 }
 
+//Method to write pid in bbserv.pid
 void write_pid(){
     std::ofstream file(PID_FILE);
     //    printf("PID: %d\nPPID: %d\n", getpid(), getppid());
@@ -101,16 +103,19 @@ void write_pid(){
     file.close();
 }
 
+//SIGTERM Handler
 void sigterm_handler(int signum) {
     printf("SIGTERM received. Terminating\n");
     exit(EXIT_SUCCESS);
 }
 
+//SIGQUIT Handler
 void sigquit_handler(int signum) {
     printf("SIGQUIT received. Terminating\n");
     exit(EXIT_SUCCESS);
 }
 
+//SIQHUP Handler
 void sighup_handler(int signum) {
     printf("SIGHUP received. Restarting...\n");
     read_config();
@@ -122,26 +127,23 @@ void sighup_handler(int signum) {
     args_map[CONFIG_FILE] = config_file;
     args_map[SYNCPORT] = std::to_string(sp);
     args_map[BBPORT] = std::to_string(bp);
-//    if(strcmp(args_map[BBPORT].data(), std::to_string(bp).data()) != 0){
-//        args_map[BBPORT] = std::to_string(bp);
-//    }
-//    if(strcmp(args_map[BBPORT].data(), std::to_string(bp).data()) != 0){
-//        args_map[BBPORT] = std::to_string(bp);
-//    }
+
     printf("bbfile: %s, peers: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
            bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
-    // sleep(60);
+
     master_socket_close();
     master_socket_peer_close();
     run_server(args_map);
 }
 
+//Method to set Unix signals
 void set_signals(){
     signal(SIGTERM, sigterm_handler);
     signal(SIGQUIT, sigquit_handler);
     signal(SIGHUP, sighup_handler);
 }
 
+//Method to create daemon using two fork method
 void create_daemon(){
     pid_t pid;
     pid = fork();
@@ -252,13 +254,18 @@ int main(int argc, char *argv[]) {
                bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
     }
 
+    if(bbfile.empty()){
+        printf("Failed to obtain the database file location\n");
+        exit(EXIT_FAILURE);
+    }
+
     if(is_daemon){
         create_daemon();
     } else{
         set_signals();
     }
+
     write_pid();
-    run_server(args_map);
-//    auto print = (*printf);
+    run_server(args_map); //Calling the server
     return 0;
 }
