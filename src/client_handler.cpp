@@ -64,7 +64,7 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
             }
         } else if (string_startswith(read_buffer, CMD_READ)) {
             try {
-                std::string res = read_message(args[BBFILE], read_buffer);
+                std::string res = read_message(args[BBFILE], read_buffer, is_debug);
                 if (res.empty()) {
                     sprintf(response_buffer, "%s %s Message number not exist!\n", RES_MESSAGE_READ_NE,
                             string_file_msg_split(read_buffer, ' ', 1)[1].data());
@@ -81,7 +81,7 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
                     start_sync(std::stoi(args[SYNCPORT]), client_name, read_buffer, client_fd);
                     continue;
                 }
-                int res = write_message(args[BBFILE], client_name, read_buffer);
+                int res = write_message(args[BBFILE], client_name, read_buffer, is_debug);
                 if (res == -1) {
                     sprintf(response_buffer, "%s Server error\n", RES_MESSAGE_WROTE_ERR);
                 } else {
@@ -96,7 +96,7 @@ int handle_client(const int client_fd, std::map<std::string, std::string> &args)
                     start_sync(std::stoi(args[SYNCPORT]), client_name, read_buffer, client_fd);
                     continue;
                 }
-                int res = replace_message(args[BBFILE], client_name, read_buffer);
+                int res = replace_message(args[BBFILE], client_name, read_buffer,is_debug);
                 if (res != -1) {
                     sprintf(response_buffer, "%s %i\n", RES_MESSAGE_WROTE, res);
                 } else {

@@ -1,3 +1,0 @@
-/home/jj/Documents/Study/simple_linux_server/cmake-build-debug/CMakeFiles/bbserver2.dir
-/home/jj/Documents/Study/simple_linux_server/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/jj/Documents/Study/simple_linux_server/cmake-build-debug/CMakeFiles/rebuild_cache.dir

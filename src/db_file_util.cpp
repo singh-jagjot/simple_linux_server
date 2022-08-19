@@ -16,7 +16,7 @@ std::binary_semaphore write_semaphore{1};
 static std::string message_replaced;
 
 //This file has all the database related functions defined.
-std::string read_message(const std::string &db_file, const std::string &msg) {
+std::string read_message(const std::string &db_file, const std::string &msg, bool is_debug) {
     read_semaphore.acquire();
     readers_count++;
     if (readers_count == 1) {
@@ -37,7 +37,9 @@ std::string read_message(const std::string &db_file, const std::string &msg) {
         }
     }
     file.close();
-    std::this_thread::sleep_for(std::chrono::seconds(READ_WAIT));
+
+    if(is_debug)
+        std::this_thread::sleep_for(std::chrono::seconds(READ_WAIT));
 
     read_semaphore.acquire();
     readers_count--;
@@ -74,7 +76,7 @@ std::string read_recent_line_number(const std::string &db_file){
     return line.empty() ? "0" : string_split(line, '/')[0];
 }
 
-int write_message(const std::string &db_file, std::string &poster, std::string msg) {
+int write_message(const std::string &db_file, std::string &poster, std::string msg, bool is_debug) {
     write_semaphore.acquire();
     writers_count++;
 //    printf("Writers count %i\n", (int) writers_count);
@@ -91,14 +93,15 @@ int write_message(const std::string &db_file, std::string &poster, std::string m
         msg_no = -1;
     }
     file.close();
-    std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
+    if(is_debug)
+        std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     writers_count--;
 //    printf("Writers count %i\n", (int) writers_count);
     write_semaphore.release();
     return msg_no;
 }
 
-int replace_message(const std::string &db_file, const std::string &poster, std::string msg) {
+int replace_message(const std::string &db_file, const std::string &poster, std::string msg, bool is_debug) {
     write_semaphore.acquire();
     writers_count++;
 //    printf("Writers count %i\n", (int) writers_count);
@@ -130,7 +133,8 @@ int replace_message(const std::string &db_file, const std::string &poster, std::
         }
     }
     file.close();
-    std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
+    if(is_debug)
+        std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     writers_count--;
 //    printf("Writers count %i\n", (int) writers_count);
     write_semaphore.release();
@@ -153,7 +157,7 @@ void write_lock_release() {
     write_semaphore.release();
 }
 
-int write_synced_message(const std::string &db_file, const std::string &msg){
+int write_synced_message(const std::string &db_file, const std::string &msg, bool is_debug){
     std::ofstream file(db_file, std::ios::app);
     int res = 0;
     if (file) {
@@ -162,11 +166,12 @@ int write_synced_message(const std::string &db_file, const std::string &msg){
         res = -1;
     }
     file.close();
-    std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
+    if(is_debug)
+        std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     return  res;
 }
 
-int replace_synced_message(const std::string &db_file, const std::string &msg){
+int replace_synced_message(const std::string &db_file, const std::string &msg, bool is_debug){
     auto v = string_file_msg_split(msg, '/', 2);
     auto msg_no = v[0];
     std::fstream file(db_file);
@@ -193,11 +198,12 @@ int replace_synced_message(const std::string &db_file, const std::string &msg){
             break;
         }
     }
-    std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
+    if(is_debug)
+        std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     return found ? 0 : -1;
 }
 
-int undo_synced_write_message(const std::string &db_file){
+int undo_synced_write_message(const std::string &db_file, bool is_debug){
     std::fstream file(db_file);
     std::string line, temp_msg_no;
     std::string msg_no = read_recent_line_number(db_file);
@@ -221,10 +227,12 @@ int undo_synced_write_message(const std::string &db_file){
         }
     }
     file.close();
+    if(is_debug)
+        std::this_thread::sleep_for(std::chrono::seconds(WRITE_WAIT));
     return found ? 0 : -1;
 }
 
-int undo_synced_replace_message(const std::string &db_file){
+int undo_synced_replace_message(const std::string &db_file, bool is_debug){
     auto v = string_file_msg_split(message_replaced, '/', 2);
     auto msg_no = v[0];
     std::fstream file(db_file);
@@ -247,6 +255,9 @@ int undo_synced_replace_message(const std::string &db_file){
             }
             break;
         }
+    }
+    if(found){
+        write_synced_message(db_file, message_replaced, is_debug);
     }
     return found ? 0 : -1;
 }

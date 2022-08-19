@@ -1,0 +1,89 @@
+Collaborators: Jagjot Singh-002311630 , Jagpreet Singh Rajpal-002309033
+Email IDs: jsingh212@ubishops.ca, jrajpal21@ubishops.ca
+
+********************************************************************
+Bulletin Board Server 
+********************************************************************
+
+Useful input files
+i) bbserv.conf: contains default parameters for the server, server
+   will run without .conf file as long as 'database' file location
+   is provided.
+
+Useful output file
+i) bbserv.log: Contains all the logs where server run as a Daemon
+ii) bbserv.pid: Contains PID of the Server
+
+Steps to execute
+1) Open the terminal at the folder location.
+2) Run 'make' command to generate the binary
+3) Type './bbserv'
+4) To pass config file to bbserv type './bbserv -c bbserv.conf'
+5) Config file contains the following:
+	THMAX=20
+	BBPORT=9000
+	SYNCPORT=10000
+	BBFILE=bbfile
+	DAEMON=0
+	DEBUG=true
+6) Other options can be provided based on the challenge documentation. 	
+   This values can be modified according to the scenarios
+*********************************************************************
+
+Implementation
+We followed the instructions as directed in the challenge documentation
+The server we implemented accepts the requests and in turn responds to them as per the guidelines of the project
+
+************************************************************************************************************
+
+Smart Work
+
+1) We have implemented our own string related methods as there is very limited support to handle different stings related operations in C++
+   example:
+   	a)  string_startswith(main_string,comparing_string)
+   	b)  string_split(main_string,token)
+   	c)  string_strip(string)
+   	d)  string_contains(string,string) 	  	
+   	e)  string_file_msg_split(main_string,token,token_occurrence)
+   	
+   All of the above methods are declared in string_helper.h header file and are defined in string_helper.cpp
+
+2) In two phase commit protocol our algorithm checks whether the incoming signal message from the peers was sent from the peer whose IPv4 address was mentioned in the config file
+
+3) Our entire code base is modular and use respective header file for the corresponding cpp files  	 
+
+4) We have explicitly defined the constants as macros in header files and we have declared the most used constants in common.h header file
+
+5) We have also segregated our code for client handling and peer handling in their respective cpp files
+
+6) In creating daemon used double forking mechanism and instead of depending on the default implementation of UNIX system header.
+
+7) When as a daemon process, we have transferred the output of the stdout to a logfile using "freopen(LOG_FILE, "w+", stdout)" instead of depending on any flag and if condition.
+
+8) We have used the features of C++20 in program with semaphores.
+
+9) With our custom implementations of string related methods, we are able to accept usernames/messages with contains spaces instead of ignoring them or passing errors to the user.
+   for example consider the following example:
+	Trying 127.0.0.1...
+	Connected to 127.0.0.1.
+	Escape character is '^]'.
+	0.0 Hello!Welcome to Bulletin Board Server!
+	USER JJ SINGH
+	1.0 HELLO JJ SINGH Welcome!
+
+**************************************************************************************************************************************
+
+Issues and future enhancements
+
+1)We have extensively used printf() function in our code even though we used C++. We could have used 'cout' but I really needed to use string formatting feature of printf
+  which was not that easy in cout. I could have made my own custom string function for formatting as well but I decided to go with printf instead of reinventing the wheel.
+
+2)Due to lack of any proper knowledge on 'C/C++' and 'Systems Programming and Network Programming' we really tried our best to implement the timeout functionality on the
+  peer to peer communication but in the end we failed to use the poll() function in our code to handle the timeout.
+  Due to earlier server architectural decisions, adding poll() was making the rest of the logic to fail.
+  Now that timeout is not properly implemented, in one particular case when a 'peer' fails to send any positive of negative signal to the master, it enters in a deadlock.
+  To test the UNDO functionality we can send negative signal explicitly on the master sync port. Provided if we had more time we could have fixed this issue and have 
+  implemented the timeout functionality.
+
+********************************************************************************************************************************************
+

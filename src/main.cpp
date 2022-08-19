@@ -58,9 +58,9 @@ void read_config() {
             } else if (temp[0] == PEERS) {
                 peers = temp.at(1);
             } else if (temp[0] == DAEMON) {
-                if (temp.at(1) == "true") {
+                if (temp.at(1) == "true" || temp.at(1) == "1") {
                     is_daemon = true;
-                } else if (temp.at(1) == "false") {
+                } else if (temp.at(1) == "false" || temp.at(1) == "0") {
                     is_daemon = false;
                 } else {
                     printf("Invalid %s value in %s: %s", DAEMON, config_file.data(), temp.at(1).data());
@@ -89,14 +89,14 @@ void read_config() {
 }
 
 //Method to write pid in bbserv.pid
-void write_pid(){
+void write_pid() {
     std::ofstream file(PID_FILE);
     //    printf("PID: %d\nPPID: %d\n", getpid(), getppid());
-    if(file){
+    if (file) {
 //        file << "PID: " << getpid() << "\nPPID: " << getppid() << std::endl;
-        file << getpid() <<std::endl;
+        file << getpid() << std::endl;
     } else {
-        if(debug_mode){
+        if (debug_mode) {
             printf("Unable to create/write %s\n", PID_FILE);
         }
     }
@@ -137,54 +137,51 @@ void sighup_handler(int signum) {
 }
 
 //Method to set Unix signals
-void set_signals(){
+void set_signals() {
     signal(SIGTERM, sigterm_handler);
     signal(SIGQUIT, sigquit_handler);
     signal(SIGHUP, sighup_handler);
 }
 
 //Method to create daemon using two fork method
-void create_daemon(){
+void create_daemon() {
     pid_t pid;
     pid = fork();
-    if(pid < 0){
+    if (pid < 0) {
         printf("%s\n", "1st forking failed to create a daemon. Exiting..\n");
         exit(EXIT_FAILURE);
     }
-    if (pid > 0)
-    {
+    if (pid > 0) {
         printf("%s\n", "1st forking success! Terminating the parent process..\n");
         exit(EXIT_SUCCESS);
     }
 
-    if (setsid() < 0)
-    {
+    if (setsid() < 0) {
         exit(EXIT_FAILURE);
     }
-    
+
     set_signals();
 
     pid = fork();
-    if(pid < 0){
+    if (pid < 0) {
         printf("%s\n", "2nd forking failed to create a daemon. Exiting..\n");
         exit(EXIT_FAILURE);
     }
-    if (pid > 0)
-    {
+    if (pid > 0) {
         printf("%s\n", "2nd forking forking success! Terminating the parent process..\n");
         exit(EXIT_SUCCESS);
     }
 
     umask(0);
-    for (auto x = sysconf(_SC_OPEN_MAX); x>=0; x--)
-    {
-        close (x);
+    for (auto x = sysconf(_SC_OPEN_MAX); x >= 0; x--) {
+        close(x);
     }
     freopen(LOG_FILE, "w+", stdout);
 }
 
 int main(int argc, char *argv[]) {
     int opt;
+    std::string uf_peers;
 
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "-c")) {
@@ -192,7 +189,7 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
-    
+
     read_config();
 
     while ((opt = getopt(argc, argv, ":b:fdT:tp:s:c:")) != -1) {
@@ -249,12 +246,25 @@ int main(int argc, char *argv[]) {
     args_map[DEBUG] = std::to_string(debug_mode);
     args_map[CONFIG_FILE] = config_file;
 
-    if(debug_mode){
-        printf("bbfile: %s, peers_set: %s, configfile: %s, thmax: %i, bp: %i, sp: %i, is_daemon: %i, debug: %i\n",
-               bbfile.data(), peers.data(), config_file.data(), thmax, bp, sp, is_daemon, debug_mode);
+    for (int i = optind; i < argc; ++i) {
+        std::string arg = argv[i];
+        bool flag = false;
+        if (string_startswith(arg, "localhost:") or string_startswith(arg, "127.0.0.1:")) {
+            uf_peers += "127.0.0.1:" + string_split(arg, ':')[1] + " ";
+            flag = true;
+        }
+        if(flag){
+            args_map[PEERS] = uf_peers;
+        }
     }
 
-    if(bbfile.empty()){
+    if (debug_mode) {
+        printf("bbfile: %s, peers_set: %s, configfile: %s, thmax: %s, bp: %s, sp: %s, is_daemon: %s, debug: %s\n",
+               args_map[BBFILE].data(), args_map[PEERS].data(), args_map[CONFIG_FILE].data(), args_map[THMAX].data(),
+               args_map[BBPORT].data(), args_map[SYNCPORT].data(), args_map[DAEMON].data(), args_map[DEBUG].data());
+    }
+
+    if (bbfile.empty()) {
         printf("Failed to obtain the database file location\n");
         exit(EXIT_FAILURE);
     }

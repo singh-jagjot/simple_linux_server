@@ -6,6 +6,7 @@
 #include <cstring>
 #include <thread>
 #include <vector>
+#include <unistd.h>
 #include "../include/common.h"
 #include "../include/connect_peer.h"
 #include "../include/peer_handler.h"

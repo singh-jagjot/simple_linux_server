@@ -6,6 +6,7 @@
 #include <poll.h>
 #include <set>
 #include <stdexcept>
+#include <unistd.h>
 #include "../include/common.h"
 #include "../include/peer_handler.h"
 #include "../include/string_helper.h"
@@ -177,7 +178,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             }
             if(changes_committed){
                 if(is_write_msg){
-                    if(undo_synced_write_message(args[BBFILE]) != 0){
+                    if(undo_synced_write_message(args[BBFILE], is_debug) != 0){
                         if(is_debug){
                             printf("Peer: Some error occurred wile undoing\n");
                         }
@@ -187,7 +188,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                         }
                     }
                 } else {
-                    if(undo_synced_replace_message(args[BBFILE]) != 0){
+                    if(undo_synced_replace_message(args[BBFILE], is_debug) != 0){
                         if(is_debug){
                             printf("Peer: Some error occurred wile undoing\n");
                         }
@@ -207,7 +208,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                     if(is_debug){
                         printf("Peer: %s signal received. Writing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
                     }
-                    if(write_synced_message(args[BBFILE], msg_vec[2].data()) != 0){
+                    if(write_synced_message(args[BBFILE], msg_vec[2].data(), is_debug) != 0){
                         throw std::runtime_error("Peer: Failed to write synced message\n");
                     } else {
                         if(send_to_peer(master_ip, master_port, ready_response(SYNC_COMMIT_OK)) != -1){
@@ -225,7 +226,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                     if(is_debug){
                         printf("Peer: %s signal received. Replacing %s to file\n", SYNC_COMMIT, msg_vec[2].data());
                     }
-                        if(replace_synced_message(args[BBFILE], msg_vec[2].data()) != 0){
+                        if(replace_synced_message(args[BBFILE], msg_vec[2].data(), is_debug) != 0){
                             throw std::runtime_error("Peer: Failed to replace synced message\n");
                         } else {
                             if(send_to_peer(master_ip, master_port, ready_response(SYNC_COMMIT_OK)) != -1){
@@ -287,7 +288,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                         if(is_debug){
                             printf("Master: Writing %s to file\n", commit_msg.data());
                         }
-                        if(write_synced_message(args[BBFILE], commit_msg) != 0){
+                        if(write_synced_message(args[BBFILE], commit_msg, is_debug) != 0){
                             throw std::runtime_error("Master: Failed to write synced message\n");
                         } else {
                             if(is_debug){
@@ -307,7 +308,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                         if(is_debug){
                             printf("Master: Replacing %s to file\n", commit_msg.data());
                         }
-                        if(replace_synced_message(args[BBFILE], commit_msg) != 0){
+                        if(replace_synced_message(args[BBFILE], commit_msg, is_debug) != 0){
                             throw std::runtime_error("Master: Failed to replace synced message\n");
                         } else {
                             if(is_debug){
@@ -348,7 +349,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
             }
             if(changes_committed){
                 if(is_write_msg){
-                    if(undo_synced_write_message(args[BBFILE]) != 0){
+                    if(undo_synced_write_message(args[BBFILE], is_debug) != 0){
                         if(is_debug){
                             printf("Peer: Some error occurred wile undoing\n");
                         }
@@ -358,7 +359,7 @@ int handle_peer(const int peer_fd, std::map<std::string, std::string> &args){
                         }
                     }
                 } else {
-                    if(undo_synced_replace_message(args[BBFILE]) != 0){
+                    if(undo_synced_replace_message(args[BBFILE], is_debug) != 0){
                         if(is_debug){
                             printf("Peer: Some error occurred wile undoing\n");
                         }

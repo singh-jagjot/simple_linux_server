@@ -17,22 +17,22 @@ extern std::atomic<int> writers_count;
 extern std::binary_semaphore read_semaphore;
 extern std::binary_semaphore write_semaphore;
 
-extern std::string read_message(const std::string &db_file, const std::string &msg);
+extern std::string read_message(const std::string &db_file, const std::string &msg, bool is_debug);
 
 std::string read_recent_line(const std::string &db_file);
 
 extern std::string read_recent_line_number(const std::string &db_file);
 
-extern int write_message(const std::string &db_file, std::string &poster, std::string msg);
+extern int write_message(const std::string &db_file, std::string &poster, std::string msg, bool is_debug);
 
-extern int replace_message(const std::string &db_file, const std::string &poster, std::string msg);
+extern int replace_message(const std::string &db_file, const std::string &poster, std::string msg, bool is_debug);
 
-extern int write_synced_message(const std::string &db_file, const std::string &msg);
+extern int write_synced_message(const std::string &db_file, const std::string &msg, bool is_debug);
 
-extern int replace_synced_message(const std::string &db_file, const std::string &msg);
+extern int replace_synced_message(const std::string &db_file, const std::string &msg, bool is_debug);
 
-extern int undo_synced_write_message(const std::string &db_file);
-extern int undo_synced_replace_message(const std::string &db_file);
+extern int undo_synced_write_message(const std::string &db_file, bool is_debug);
+extern int undo_synced_replace_message(const std::string &db_file, bool is_debug);
 
 extern void read_lock_acquire();
 

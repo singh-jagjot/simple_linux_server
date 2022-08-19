@@ -1,0 +1,43 @@
+The heart of the two phase-commit algorithm resides in the files "peer_handler.h" and "peer_handler.cpp". Below are the steps in which our two phase-commit algorithm works:
+
+Step 1: Once a client sends either "WRITE" or "REPLACE" commands, program control goes to start_sync() method. This method locks the read and write access for master and sends the below message to all the peers:
+	"01 SYNC GET READY|%s"
+	Above message consists of two things a) signal message(01 SYNC GET READY) b) IPv4 address of the master('%s' this will be replace by IPv4 address in program)
+
+Step 2: Once a peer receives the above message, it locks the read and write access to the database file by using semaphores. After a successful lock it sends back the below message to the master:
+	"02 SYNC GET READY OK|%s|%s" => signal message|peer IPv4|Latest Message Number from the database file
+	
+	If peer fails to get lock access or some error occurs it sends back the following message to the master:
+	"03 SYNC GET READY FAILED|%s" => signal message|peer IPv4
+
+Step 3: If Master receives a "02 SYNC GET READY OK|%s|%s" signal(positive) then, it saves the peer IPv4 address to the set of positive acknowledgement peers. Before storing the IPv4 address to the set
+	master also verify that this message was send from a provided peers in the config file or else it ignores the message. Also master stores the latest message number provided by the peer. This
+	latest message number will be checked for is greater than operation.
+	If Master receives a "03 SYNC GET READY FAILED|%s" message from any of the peers the it immediately send "04 SYNC ABORT" message to the peers and abort the sync and also sends the error to the
+	client. Also it releases the locks from the read and write process and set internal values to default.
+
+Step 4: If Master receives positive acknowledgments(02 SYNC GET READY OK|%s|%s") from all the peers ie. size of the set of positive acknowledgement peers is equal the list of peers, then Master sends the below message to all peers:
+	"05 SYNC DO COMMIT|%s|%s"  => signal|msg type|msg to commit
+	
+	Here message(msg) type can have almost two values 'WRITE' or 'REPLACE', These values will be used by peers to know how commit the final message(msg to commit). Here message to commit also contains
+	the message number to be used incase of 'WRITE' operation(this is the greatest of the latest message numbers from each database file(peers and masters)).
+
+Step 5: When a peer receives a "02 SYNC GET READY OK|%s|%s" message, it commits the provided message to the database file. If a peers fails to commit the message to the database file or some system error occurs,
+	it sends back the below message to the master and it releases the locks from the read and write process and set internal values to default:
+	"06 SYNC COMMIT FAILED|%s" => signal|peer IPv4"
+	
+	If a peer successfully commits the message to the database file, then it sends back the below message to the master:
+	"07 SYNC COMMIT OK|%s" => signal| peer IPv4
+
+Step 6: If master receives "07 SYNC COMMIT OK|%s" message then, it saves the peer IPv4 in the set of committed peers. If master receives a "06 SYNC COMMIT FAILED|%s" message then it immediately 
+	send "04 SYNC ABORT" message to the peers and abort the sync and also sends the error to the client.
+
+Step 7: When master receives the commit message from all the peers ie set of committed peers is equal to the peers list, then it finally commits the message to it's database file and sends 
+	The "3.0 WROTE message-number" message to the client where "message-number" is the greatest message number of all the peers. After this master sends the final "09 SYNC COMPLETED" 
+	signal to all the peers. Also it releases the locks from the read and write process and set internal values to default.
+	If master fails to commit the message to the database file then it sends "3.2 ERROR WRITE text" message to the client where 'text' is just a generic error text and then it sends 
+	the "08 SYNC FAILED" message to all the peers. Also it releases the locks from the read and write process and set internal values to default.
+
+Step 8: If a peer receives "09 SYNC COMPLETED" signal then it releases the locks from the read and write process and set internal values to default.
+	If a peer receives "08 SYNC FAILED" signal from the master then it first undo the data written on the file, then it releases the locks from the read and write process and set internal values to default.
+
